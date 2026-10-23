@@ -1,0 +1,69 @@
+# MockMate team command rules for Codex.
+# Mirrors .claude/settings.json. Loaded only when this project is trusted in Codex.
+# Rules match command prefixes only; AGENTS.md section 3 still applies to every other form.
+
+# --- Forbidden: history-rewriting or destructive git commands ---
+
+prefix_rule(
+    pattern = ["git", "push", ["--force", "-f", "--force-with-lease"]],
+    decision = "forbidden",
+    justification = "Force push is not allowed. Ask Jerry if history must change.",
+    match = ["git push --force", "git push -f origin main", "git push --force-with-lease"],
+    not_match = ["git push origin feat/ui-intake"],
+)
+
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "forbidden",
+    justification = "git reset --hard can lose work. Use git stash or ask the user.",
+    match = ["git reset --hard", "git reset --hard HEAD~1"],
+    not_match = ["git reset HEAD app/page.tsx"],
+)
+
+prefix_rule(
+    pattern = ["git", "commit", "--amend"],
+    decision = "forbidden",
+    justification = "Do not amend commits. Make a new commit after user approval.",
+    match = ["git commit --amend", "git commit --amend -m fix"],
+    not_match = ["git commit -m \"feat: add intake page\""],
+)
+
+# --- Prompt: every commit, push, merge, history edit, install, deploy ---
+
+prefix_rule(
+    pattern = ["git", ["commit", "push", "merge", "rebase"]],
+    decision = "prompt",
+    justification = "Each commit and each push needs explicit user approval (AGENTS.md section 3).",
+    match = ["git commit -m \"feat: add intake page\"", "git push origin feat/ui-intake", "git merge main", "git rebase main"],
+    not_match = ["git status", "git diff"],
+)
+
+prefix_rule(
+    pattern = ["git", "branch", ["-d", "-D", "--delete"]],
+    decision = "prompt",
+    justification = "Deleting a branch needs explicit user approval.",
+    match = ["git branch -d feat/old", "git branch -D feat/old"],
+    not_match = ["git branch", "git branch feat/new"],
+)
+
+prefix_rule(
+    pattern = ["npm", ["install", "i", "add"]],
+    decision = "prompt",
+    justification = "New npm packages need Jerry's approval (AGENTS.md section 4).",
+    match = ["npm install", "npm i zod", "npm install shadcn"],
+    not_match = ["npm run dev", "npm run lint"],
+)
+
+prefix_rule(
+    pattern = ["vercel"],
+    decision = "prompt",
+    justification = "Deployments are run by Jerry after approval.",
+    match = ["vercel deploy", "vercel --prod"],
+)
+
+prefix_rule(
+    pattern = ["npx", "vercel"],
+    decision = "prompt",
+    justification = "Deployments are run by Jerry after approval.",
+    match = ["npx vercel deploy"],
+)

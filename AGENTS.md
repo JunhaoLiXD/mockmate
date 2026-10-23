@@ -12,6 +12,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 These rules apply to every coding agent working in this repository (Claude Code, Codex, or any other). When two rules conflict, follow the stricter one.
 
+Tool-enforced versions of the git and install rules live in `.claude/settings.json` (Claude Code) and `.codex/rules/mockmate.rules` (Codex). Both load only after you trust this folder in the tool. They catch common command forms only; the written rules below always apply.
+
 ## 1. Source of truth
 
 - Product requirements live in `docs/MockMate_AI_Agent_Development_Brief.md`. Read it before starting work, especially sections 0, 3, 4, 9, 10 and 17.
@@ -67,7 +69,7 @@ Change only files your role owns. If you need a change elsewhere, tell the user 
 
 | Owner | Role | Owns |
 |---|---|---|
-| Jerry | Tech lead: backend, realtime voice, integration, deploy | `types/`, `mocks/`, `app/api/`, `lib/` (including `lib/voice/`), `package.json`, `package-lock.json`, `.claude/`, `AGENTS.md`, deployment and environment variables |
+| Jerry | Tech lead: backend, realtime voice, integration, deploy | `types/`, `mocks/`, `app/api/`, `lib/` (including `lib/voice/`), `package.json`, `package-lock.json`, `.claude/`, `.codex/`, `AGENTS.md`, `CLAUDE.md`, deployment and environment variables |
 | Yuki | Frontend + QA | Page files under `app/` (not `app/api/`) and `components/`. Uses voice only through Jerry's hook; never calls `getUserMedia` or WebRTC directly. New npm packages need Jerry's approval. |
 | Lisa | Product, content, pitch | `content/` and product docs in `docs/` (demo script, Devpost copy, README product sections) |
 

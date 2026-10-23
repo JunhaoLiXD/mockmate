@@ -1,0 +1,4 @@
+# MockMate project config for Codex.
+# Codex loads this layer (and .codex/rules/) only after you trust this project.
+# Team rules live in AGENTS.md; command approval rules live in .codex/rules/mockmate.rules.
+# Keep personal settings in ~/.codex/config.toml, not here.
