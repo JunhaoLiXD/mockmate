@@ -2,7 +2,7 @@ import type { CategoryFeedback, FeedbackItem, InterviewReport, RepositoryEvidenc
 import { CATEGORIES_BY_MODE, COMPANY_STYLE_DISCLAIMER, PRACTICE_DISCLAIMER, RUBRIC_CATEGORY_LABELS } from "@/types";
 import type { RoomResult } from "./LiveRoom";
 
-export type ReportStatus = "loading" | "ready" | "error";
+export type ReportStatus = "loading" | "ready" | "unavailable" | "error";
 
 function Evidence({ quotes, files }: { quotes: TurnQuote[]; files: RepositoryEvidence[] }) {
   if (!quotes.length && !files.length) return null;
@@ -217,6 +217,12 @@ export function FeedbackStep({
             <div className="report-state report-state-error" role="alert">
               <strong>Report unavailable</strong>
               <p>{reportError ?? "We could not prepare feedback for this session. Your transcript is still available below."}</p>
+            </div>
+          )}
+          {reportStatus === "unavailable" && (
+            <div className="report-state" role="status">
+              <strong>Report not connected yet</strong>
+              <p>Your live interview transcript is available below. Evidence-based feedback for live sessions is coming soon.</p>
             </div>
           )}
           {reportStatus === "ready" && report && <Report report={report} isSample={isSample} />}

@@ -1,5 +1,5 @@
 import type { AnalyzeResponse, InterviewPlan } from "@/types";
-import { COMPANY_STYLE_DISCLAIMER, COMPANY_STYLES, INTERVIEW_MODES } from "@/types";
+import { INTERVIEW_MODES } from "@/types";
 
 export function PlanStep({
   analysis,
@@ -15,7 +15,6 @@ export function PlanStep({
   onEdit: () => void;
 }) {
   const repo = analysis.repository;
-  const styleLabel = COMPANY_STYLES.find((s) => s.value === plan.companyStyle)?.label ?? plan.companyStyle;
   const modeLabel = INTERVIEW_MODES.find((m) => m.value === plan.mode)?.label ?? plan.mode;
 
   return (
@@ -24,7 +23,7 @@ export function PlanStep({
         <div>
           <span className="section-kicker">02 / FIND YOUR ANGLE</span>
           <h2 id="plan-title">Your practice plan.</h2>
-          <p>A brief look at the session ahead. The interview questions stay private until you begin.</p>
+          <p>See the focus areas and the materials behind them. Specific questions stay private until you begin.</p>
         </div>
         <span className="heading-decoration" aria-hidden="true">
           ↗
@@ -54,9 +53,8 @@ export function PlanStep({
               <span className="mini-label">YOUR SESSION</span>
               <h3>{analysis.jobProfile.roleTitle}</h3>
               <p>
-                {styleLabel} · {modeLabel} · {plan.durationMinutes} minutes
+                {modeLabel} · {plan.durationMinutes} minutes
               </p>
-              <p className="company-angle">{COMPANY_STYLE_DISCLAIMER}</p>
             </div>
             <div className="duration">
               <strong>{plan.durationMinutes}</strong>
@@ -64,16 +62,22 @@ export function PlanStep({
             </div>
           </div>
 
-          <div className="plan-teaser" aria-label="Preparation directions">
-            <span className="mini-label">A FEW DIRECTIONS</span>
-            <h3>Come ready to talk through your work.</h3>
-            <p>The interviewer will choose questions based on your materials and your answers. You can prepare in broad strokes:</p>
-            <ul>
-              <li>Recall a project you can explain clearly from start to finish.</li>
-              <li>Think about decisions you made and what you learned.</li>
-              <li>Be ready to clarify your thinking when asked to go deeper.</li>
-            </ul>
-            <p className="plan-teaser-note">Specific questions and follow-ups are revealed during the interview.</p>
+          <div className="plan-focus" aria-label="Interview focus areas">
+            <span className="mini-label">INTERVIEW FOCUS AREAS</span>
+            <p>One focus area per planned question. The interviewer may adapt to your answers.</p>
+            {plan.questions.map((question, index) => {
+              const codeSources = question.sourceRefs.filter((ref) => ref.kind === "repository");
+              return <article className="question-card" key={question.id}>
+                <h3>Topic {index + 1} · {question.targetedSkill}</h3>
+                <div className="focus-sources">
+                  <span className="mini-label">REPOSITORY REFERENCES</span>
+                  {codeSources.length ? <ul>{codeSources.map((ref, sourceIndex) => (
+                    <li key={sourceIndex}><code>{ref.evidence.path}</code>{ref.evidence.lineRange ? ` · lines ${ref.evidence.lineRange.start}–${ref.evidence.lineRange.end}` : " · line range unavailable"}</li>
+                  ))}</ul> : <p>No code reference for this focus area.</p>}
+                </div>
+              </article>;
+            })}
+            <p className="focus-note">Specific questions and follow-ups are revealed during the interview.</p>
           </div>
 
           <div className="stage-actions">
@@ -89,28 +93,27 @@ export function PlanStep({
         <aside className="inspection-card">
           <span className="mini-label">SESSION INPUTS</span>
           <h3>What shaped this session</h3>
-          <p>Your materials help the interviewer choose a direction. The report may cite evidence after the session.</p>
+          <p>These are the materials used to shape the plan.</p>
           <div className="inspection-row">
             <span className="inspection-glyph">⌘</span>
             <div>
               <strong>Repository</strong>
-              <small>
-                {repo ? `${repo.inspectedFiles.length} files inspected` : "No repository analyzed"}
-              </small>
+              <small>{repo ? `${repo.owner}/${repo.name} @ ${repo.commitSha.slice(0, 12)}` : "No repository analyzed"}</small>
+              {repo && <ul className="inspection-list">{repo.inspectedFiles.map((file) => <li key={file.path}><code>{file.path}</code></li>)}</ul>}
             </div>
           </div>
           <div className="inspection-row">
             <span className="inspection-glyph">⌁</span>
             <div>
-              <strong>Job description</strong>
-              <small>Role context included</small>
+              <strong>Job priorities</strong>
+              <small>{analysis.jobProfile.prioritySkills.length ? analysis.jobProfile.prioritySkills.join(" · ") : "No priority skills identified"}</small>
             </div>
           </div>
           <div className="inspection-row">
             <span className="inspection-glyph">▤</span>
             <div>
-              <strong>Resume</strong>
-              <small>Experience context included</small>
+              <strong>Resume projects</strong>
+              <small>{analysis.candidateProfile.projects.length ? analysis.candidateProfile.projects.map((project) => project.name).join(" · ") : "No projects identified"}</small>
             </div>
           </div>
           {analysis.candidateProfile.limitations.length > 0 && (
