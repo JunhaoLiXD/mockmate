@@ -1,5 +1,5 @@
 import type { CategoryFeedback, FeedbackItem, InterviewReport, RepositoryEvidence, TranscriptTurn, TurnQuote } from "@/types";
-import { CATEGORIES_BY_MODE, COMPANY_STYLE_DISCLAIMER, PRACTICE_DISCLAIMER, RUBRIC_CATEGORY_LABELS } from "@/types";
+import { CATEGORIES_BY_MODE, COMPANY_STYLE_DISCLAIMER, PRACTICE_DISCLAIMER, RUBRIC_CATEGORY_LABELS, RUBRIC_LEVEL_LABELS, RUBRIC_MAX_SCORE } from "@/types";
 import type { RoomResult } from "./LiveRoom";
 
 export type ReportStatus = "loading" | "ready" | "unavailable" | "error";
@@ -41,8 +41,8 @@ function FeedbackList({ title, items }: { title: string; items: FeedbackItem[] }
 }
 
 function scoredValue(item: CategoryFeedback | undefined): number | null {
-  if (!item || (item.assessment !== "demonstrated" && item.assessment !== "partially-demonstrated")) return null;
-  if (!Number.isInteger(item.score) || item.score === undefined || item.score < 1 || item.score > 5) return null;
+  if (!item || (item.assessment !== "strong" && item.assessment !== "medium" && item.assessment !== "weak")) return null;
+  if (!Number.isInteger(item.score) || item.score === undefined || item.score < 1 || item.score > RUBRIC_MAX_SCORE) return null;
   if (!item.rubric.trim() || !item.uncertainty.trim()) return null;
   if (!item.quotes.some((quote) => quote.quote.trim() && item.evidenceTurnIds.includes(quote.turnId))) return null;
   return item.score;
@@ -50,7 +50,6 @@ function scoredValue(item: CategoryFeedback | undefined): number | null {
 
 function unscoredReason(item: CategoryFeedback | undefined): string {
   if (!item) return "No feedback for this category";
-  if (item.assessment === "not-assessed") return "Not assessed";
   if (item.assessment === "insufficient-evidence") return "Insufficient evidence";
   return "No valid evidence-backed numeric score";
 }
@@ -62,7 +61,7 @@ function ScoreSummary({ report, isSample }: { report: InterviewReport; isSample:
   });
   const scored = categories.filter((item) => item.score !== null);
   const overall = scored.length >= 2
-    ? Math.round(scored.reduce((sum, item) => sum + ((item.score ?? 1) - 1) * 25, 0) / scored.length)
+    ? Math.round(scored.reduce((sum, item) => sum + ((item.score ?? 1) - 1) * 50, 0) / scored.length)
     : null;
   const scoreTitle = overall === null ? "Practice score unavailable" : scored.length < categories.length ? "Provisional practice score" : "Overall practice score";
 
@@ -82,7 +81,7 @@ function ScoreSummary({ report, isSample }: { report: InterviewReport; isSample:
         <div className="score-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
         <p>{overall === null
           ? "Overall score unavailable: at least two categories need evidence-backed scores."
-          : "Each scored category maps 1–5 to 0–100 as (score − 1) × 25. Equal average, rounded; unscored categories excluded."}</p>
+          : "Each scored category maps 1–3 to 0–100 as (score − 1) × 50. Equal average, rounded; unscored categories excluded."}</p>
       </div>
       <div className="score-factors">
         <div className="score-factors-heading"><h4>Category scores</h4><span>Scroll for the evidence and detailed feedback ↓</span></div>
@@ -90,7 +89,7 @@ function ScoreSummary({ report, isSample }: { report: InterviewReport; isSample:
           {categories.map(({ category, feedback, score }) => (
             <div className="score-factor" key={category}>
               <div><strong>{RUBRIC_CATEGORY_LABELS[category]}</strong><span>{score !== null ? "Based on cited answers" : unscoredReason(feedback)}</span></div>
-              <span className={score === null ? "score-factor-value is-unscored" : "score-factor-value"}>{score === null ? "Unscored" : `${(score - 1) * 25} / 100`}</span>
+              <span className={score === null ? "score-factor-value is-unscored" : "score-factor-value"}>{score === null ? "Unscored" : `${(score - 1) * 50} / 100`}</span>
             </div>
           ))}
         </div>
@@ -101,8 +100,9 @@ function ScoreSummary({ report, isSample }: { report: InterviewReport; isSample:
 }
 
 function Report({ report, isSample }: { report: InterviewReport; isSample: boolean }) {
-  const demonstrated = report.categoryFeedback.filter((item) => item.assessment === "demonstrated").length;
-  const needsWork = report.categoryFeedback.filter((item) => item.assessment === "partially-demonstrated").length;
+  const strong = report.categoryFeedback.filter((item) => item.assessment === "strong").length;
+  const medium = report.categoryFeedback.filter((item) => item.assessment === "medium").length;
+  const weak = report.categoryFeedback.filter((item) => item.assessment === "weak").length;
   return (
     <div className="report-content">
       <ScoreSummary report={report} isSample={isSample} />
@@ -113,9 +113,9 @@ function Report({ report, isSample }: { report: InterviewReport; isSample: boole
       </div>
 
       <div className="report-overview" aria-label="Report overview">
-        <div><strong>{demonstrated}</strong><span>Demonstrated</span></div>
-        <div><strong>{needsWork}</strong><span>Partially demonstrated</span></div>
-        <div><strong>{report.recommendedPractice.length}</strong><span>Practice steps</span></div>
+        <div><strong>{strong}</strong><span>Strong</span></div>
+        <div><strong>{medium}</strong><span>Medium</span></div>
+        <div><strong>{weak}</strong><span>Weak</span></div>
       </div>
 
       <section className="report-section" aria-label="Rubric feedback">
@@ -127,11 +127,9 @@ function Report({ report, isSample }: { report: InterviewReport; isSample: boole
                 <h5>{RUBRIC_CATEGORY_LABELS[category.category]}</h5>
                 <div className="report-category-meta">
                   <span className={"assessment assessment-" + category.assessment}>
-                    {category.assessment === "partially-demonstrated" ? "Partially demonstrated"
-                      : category.assessment === "insufficient-evidence" ? "Insufficient evidence"
-                        : category.assessment === "not-assessed" ? "Not assessed" : "Demonstrated"}
+                    {RUBRIC_LEVEL_LABELS[category.assessment]}
                   </span>
-                  {scoredValue(category) !== null && <span className="report-score">{scoredValue(category)} / 5</span>}
+                  {scoredValue(category) !== null && <span className="report-score">{scoredValue(category)} / {RUBRIC_MAX_SCORE}</span>}
                 </div>
               </div>
               <p className="report-rubric">Rubric: {category.rubric}</p>
