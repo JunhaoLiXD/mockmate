@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Live interview room. Layout ported from Yuki's local-preview meeting room; the scripted
+ * Live interview room. Layout ported from Yuki's meeting-room prototype (PR #1); the scripted
  * questions, camera and recording are replaced by the real voice session hook.
  */
 

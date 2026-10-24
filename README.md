@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MockMate
 
-## Getting Started
+**Practice for the company, prove your skills.**
+A project-aware, company-style AI mock interviewer that studies your work before asking you questions.
 
-First, run the development server:
+> Work in progress for UF Gator Hack V 2026. A full README (features, how it works, limitations, privacy) is coming before submission.
+
+## Status
+
+| Part | State |
+|---|---|
+| Live voice interview (OpenAI Realtime over WebRTC) | Working |
+| Four-step web flow: Prepare, Plan, Interview, Review | Working |
+| Repository and resume analysis | In progress; the plan currently uses sample data |
+| Evidence-based feedback report | Planned; the review step currently shows the transcript |
+
+## Run locally
+
+Requires Node.js 24 and npm.
 
 ```bash
+npm install
+cp .env.example .env.local   # then fill in values; never commit .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Add `?mock=1` to the URL to use a scripted interview with no microphone or API calls.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Repository layout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Path | Contents |
+|---|---|
+| `app/` | Pages and API routes (`app/api/`) |
+| `components/mockmate/` | UI for the four interview steps |
+| `lib/` | Server logic and the browser voice client (`lib/voice/`) |
+| `types/` | Shared data contracts |
+| `mocks/` | Sample data and a mock voice session for UI work |
+| `docs/` | Requirements brief and release checklist |
 
-## Learn More
+Contributor and agent rules are in [`AGENTS.md`](AGENTS.md).
 
-To learn more about Next.js, take a look at the following resources:
+## Team
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Jerry (backend, voice, integration), Yuki (frontend design and QA), Lisa (product, content, pitch).

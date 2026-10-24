@@ -1,4 +1,4 @@
-/** Static page chrome ported from Yuki's local-preview design. */
+/** Static page chrome ported from Yuki's prototype design (PR #1). */
 
 export function SiteHeader({ onHome }: { onHome: () => void }) {
   return (
