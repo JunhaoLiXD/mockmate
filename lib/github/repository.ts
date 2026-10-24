@@ -153,7 +153,10 @@ export async function fetchRepository(repoUrl: string, token?: string): Promise<
   const { owner, name } = parseRepoUrl(repoUrl);
   const warnings: string[] = [];
 
-  const meta = await githubJson<RepoMeta>(`/repos/${owner}/${name}`, { token });
+  const metaResponse = await githubFetch(`/repos/${owner}/${name}`, { token });
+  // 5000 means the request was authenticated, 60 means it was not. Logs the ceiling only, never the token.
+  console.info("[github] x-ratelimit-limit:", metaResponse.headers.get("x-ratelimit-limit") ?? "missing");
+  const meta = (await metaResponse.json()) as RepoMeta;
   if (meta.private) {
     throw new GitHubError("REPO_NOT_FOUND", "Repository not found. Check the URL and make sure the repository is public.");
   }
