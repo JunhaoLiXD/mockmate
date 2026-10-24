@@ -8,9 +8,9 @@ export const mockReport: InterviewReport = {
   categoryFeedback: [
     {
       category: "implementation-understanding",
-      assessment: "partially-demonstrated",
-      score: 3,
-      rubric: "Explains how the implemented model works, not only what it does.",
+      assessment: "medium",
+      score: 2,
+      rubric: "Describes the overall design correctly, but is vague about specific parts until asked.",
       demonstrated: "After a follow-up, you explained that the curve leaves bright pixels mostly unchanged and lifts dark pixels, and that iteration widens the range.",
       unclear: "Your first answer focused on model size and did not mention pixel-wise curve estimation.",
       whyItMatters: "The role requires understanding PyTorch models well enough to debug and adapt them.",
@@ -27,7 +27,7 @@ export const mockReport: InterviewReport = {
     {
       category: "trade-off-reasoning",
       assessment: "insufficient-evidence",
-      rubric: "Weighs concrete costs and benefits of an implementation choice.",
+      rubric: "Does the candidate weigh alternatives and costs?",
       demonstrated: "You named memory on the free server as the reason for resizing.",
       unclear: "The answer was cut off before you discussed quality loss or alternatives for large images.",
       whyItMatters: "The JD lists inference latency optimization as a preferred skill.",
@@ -40,9 +40,9 @@ export const mockReport: InterviewReport = {
     },
     {
       category: "clarity",
-      assessment: "demonstrated",
-      score: 4,
-      rubric: "Explains the system concisely and in a logical order.",
+      assessment: "strong",
+      score: 3,
+      rubric: "Organized and easy to follow: starts with the main point, then adds detail.",
       demonstrated: "Your project overview covered purpose, architecture and your favorite part in a few sentences.",
       unclear: "Nothing significant.",
       whyItMatters: "Clear explanations matter when presenting work to a team.",
