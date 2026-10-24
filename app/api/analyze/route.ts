@@ -2,6 +2,7 @@ import type { AnalyzeResponse, CompanyStyle, InterviewMode } from "@/types";
 import { COMPANY_STYLES, GITHUB_REPO_URL_PATTERN, INPUT_LIMITS, INTERVIEW_MODES, RATE_LIMITS } from "@/types";
 import { buildAnalyzeResponse } from "@/lib/analyze/buildResponse";
 import { ANALYZE_INSTRUCTIONS, buildAnalyzeInput } from "@/lib/analyze/prompt";
+import { findResumeRepositoryUrl } from "@/lib/analyze/resumeRepository";
 import { analysisOutputSchema } from "@/lib/analyze/schema";
 import { AiError, generateStructured } from "@/lib/ai/structured";
 import { fetchRepository, GitHubError, type FetchedRepository } from "@/lib/github/repository";
@@ -114,15 +115,27 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
+  const resumeRepoUrl = repoUrl ? null : findResumeRepositoryUrl(resumeText);
+  const selectedRepoUrl = repoUrl || resumeRepoUrl;
   let repository: FetchedRepository | null = null;
-  if (repoUrl) {
+  if (selectedRepoUrl) {
     try {
-      repository = await fetchRepository(repoUrl, env.githubToken);
+      repository = await fetchRepository(selectedRepoUrl, env.githubToken);
+      // Name the repository so the user can check it is the right project.
+      if (resumeRepoUrl) {
+        warnings.push(
+          `Used the GitHub repository linked in your resume: ${repository.analysis.repoUrl.replace("https://", "")}. To use a different project, add its URL in the form.`,
+        );
+      }
       warnings.push(...repository.warnings);
     } catch (error) {
       if (!(error instanceof GitHubError)) throw error;
       // Fall back to resume + job description only (brief section 5.1, step 5).
-      warnings.push(`${error.message} Questions will be based on your resume and the job description only.`);
+      const reason =
+        resumeRepoUrl && error.code === "REPO_NOT_FOUND"
+          ? `The GitHub link in your resume (${resumeRepoUrl.replace("https://", "")}) could not be read; it may be private or misspelled.`
+          : error.message;
+      warnings.push(`${reason} Questions will be based on your resume and the job description only.`);
     }
   }
 

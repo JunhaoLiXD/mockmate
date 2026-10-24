@@ -52,7 +52,7 @@ function validate(values: IntakeValues): Errors {
     else if (file.size > INPUT_LIMITS.resumePdfMaxBytes) errors.resume = "Choose a PDF under 2 MB.";
   }
 
-  if (!GITHUB_REPO_URL_PATTERN.test(values.repoUrl.trim())) {
+  if (values.repoUrl.trim() && !GITHUB_REPO_URL_PATTERN.test(values.repoUrl.trim())) {
     errors.repoUrl = "Use one public repository URL: https://github.com/owner/repo.";
   }
   return errors;
@@ -170,9 +170,9 @@ export function PrepareStep({
 
           <div className="field">
             <label htmlFor="github-url">
-              Public GitHub repository <span className="required">*</span>
+              Public GitHub repository <span className="field-optional">(optional)</span>
             </label>
-            <p className="field-hint">One project you would like to talk through.</p>
+            <p className="field-hint">Add one project link, or leave this blank. We will check your resume for a public repository link, then use your resume and job description if none is available.</p>
             <div className="input-prefix">
               <span aria-hidden="true">↗</span>
               <input
