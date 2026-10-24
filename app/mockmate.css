@@ -194,6 +194,7 @@
 .report-state strong{font-size:13px}
 .report-state p{font-size:12px;line-height:1.6;margin:4px 0 0}
 .report-state-error{display:block;background:#fff8f5;border-color:#f0d3c5;color:#9a4d35}
+.report-state-error .button{margin-top:12px}
 .report-spinner{width:19px;height:19px;flex:none;border:2px solid #c4dce8;border-top-color:var(--blue);border-radius:50%;animation:report-spin .8s linear infinite}
 @keyframes report-spin{to{transform:rotate(360deg)}}
 @media(max-width:600px){

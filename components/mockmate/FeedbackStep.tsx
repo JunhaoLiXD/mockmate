@@ -180,13 +180,14 @@ function Report({ report, isSample }: { report: InterviewReport; isSample: boole
 }
 
 export function FeedbackStep({
-  result, report, reportStatus, reportError, isSample, onPracticeAgain, onNewRole,
+  result, report, reportStatus, reportError, isSample, onRetryReport, onPracticeAgain, onNewRole,
 }: {
   result: RoomResult;
   report: InterviewReport | null;
   reportStatus: ReportStatus;
   reportError: string | null;
   isSample: boolean;
+  onRetryReport: () => void;
   onPracticeAgain: () => void;
   onNewRole: () => void;
 }) {
@@ -208,19 +209,20 @@ export function FeedbackStep({
           {reportStatus === "loading" && (
             <div className="report-state" role="status" aria-live="polite">
               <span className="report-spinner" aria-hidden="true" />
-              <div><strong>Preparing your report…</strong><p>Reviewing the answers and evidence from this practice session.</p></div>
+              <div><strong>Writing your report…</strong><p>This usually takes about 30 seconds.</p></div>
             </div>
           )}
           {reportStatus === "error" && (
             <div className="report-state report-state-error" role="alert">
               <strong>Report unavailable</strong>
               <p>{reportError ?? "We could not prepare feedback for this session. Your transcript is still available below."}</p>
+              <button type="button" className="button button-primary" onClick={onRetryReport}>Try again</button>
             </div>
           )}
           {reportStatus === "unavailable" && (
             <div className="report-state" role="status">
-              <strong>Report not connected yet</strong>
-              <p>Your live interview transcript is available below. Evidence-based feedback for live sessions is coming soon.</p>
+              <strong>More answers needed for a report</strong>
+              <p>{reportError ?? "Answer at least one question to get a report."}</p>
             </div>
           )}
           {reportStatus === "ready" && report && <Report report={report} isSample={isSample} />}
@@ -255,7 +257,7 @@ export function FeedbackStep({
         <aside className="feedback-side">
           <span className="mini-label">{isSample ? "SAMPLE EVALUATION" : "EVALUATION STATUS"}</span>
           <h3>Keep practicing.</h3>
-          <p>{isSample ? "The example feedback reflects scripted answers and example code evidence." : "Evidence-based feedback for live sessions is not connected yet. Your transcript remains available for review."}</p>
+          <p>{isSample ? "The example feedback reflects scripted answers and example code evidence." : "Your report uses answers from this interview and points back to the transcript when evidence is available."}</p>
           <div className="aside-rule" />
           <p className="disclaimer">{PRACTICE_DISCLAIMER}</p>
           <p className="disclaimer">{COMPANY_STYLE_DISCLAIMER}</p>
