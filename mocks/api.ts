@@ -24,8 +24,7 @@ export const mockAnalyzeResponse: AnalyzeResponse = {
 export const mockPlanResponse: PlanResponse = { plan: mockPlan };
 
 export const mockSessionResponse: SessionResponse = {
-  clientSecret: "mock-client-secret",
-  expiresAt: "2026-10-24T14:01:00.000Z",
+  answerSdp: "v=0\r\n(mock SDP answer)",
   maxDurationSeconds: 300,
 };
 

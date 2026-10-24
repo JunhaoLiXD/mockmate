@@ -105,7 +105,8 @@ export function useMockInterviewSession(
 
   useEffect(() => clearTimers, [clearTimers]);
 
+  const [micMuted, setMicMuted] = useState(false);
   const currentQuestionId = turns.length > 0 ? (turns[turns.length - 1].questionId ?? null) : null;
 
-  return { state, turns, elapsedSeconds, maxDurationSeconds, currentQuestionId, error, endReason, start, end };
+  return { state, turns, elapsedSeconds, maxDurationSeconds, currentQuestionId, error, endReason, micMuted, setMicMuted, start, end };
 }

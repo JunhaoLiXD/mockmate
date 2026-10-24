@@ -45,6 +45,9 @@ export interface UseInterviewSessionResult {
   currentQuestionId: string | null;
   error: VoiceSessionError | null;
   endReason: SessionEndReason | null;
+  /** True while the candidate's microphone is muted. The interviewer can still speak. */
+  micMuted: boolean;
+  setMicMuted: (muted: boolean) => void;
   /** Requests the microphone, creates the session and connects. */
   start: () => Promise<void>;
   /** Ends the session and releases the microphone and connection. */

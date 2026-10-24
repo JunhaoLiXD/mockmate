@@ -88,16 +88,20 @@ export interface PlanResponse {
 
 /* ---------- POST /api/session ---------- */
 
-/** The server builds the interviewer instructions from the plan; the browser never sees the API key. */
+/**
+ * Uses the Realtime "unified interface": the browser sends its WebRTC SDP offer here, the server
+ * adds the interviewer instructions and session config, and returns OpenAI's SDP answer.
+ * The browser never receives any OpenAI credential, not even a short-lived one.
+ */
 export interface SessionRequest {
   plan: InterviewPlan;
+  /** WebRTC SDP offer from RTCPeerConnection.createOffer(). */
+  sdp: string;
 }
 
 export interface SessionResponse {
-  /** Short-lived Realtime credential. Only used to open the WebRTC connection. */
-  clientSecret: string;
-  /** ISO 8601 expiry of the credential. */
-  expiresAt: string;
+  /** SDP answer to pass to RTCPeerConnection.setRemoteDescription(). */
+  answerSdp: string;
   /** Hard limit the client must enforce by ending the call. */
   maxDurationSeconds: number;
 }
