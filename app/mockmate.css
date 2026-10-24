@@ -161,9 +161,10 @@
 .report-category h5{font-family:var(--font-outfit),Arial,sans-serif;font-size:20px;letter-spacing:-.025em;margin:0}
 .report-category-meta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px}
 .assessment,.report-score{border-radius:30px;padding:5px 8px;font-size:10px;font-weight:800;white-space:nowrap}
-.assessment-demonstrated{background:#e6f4eb;color:#276b4d}
-.assessment-partially-demonstrated{background:#fff1dd;color:#916018}
-.assessment-insufficient-evidence,.assessment-not-assessed{background:#edf1f4;color:#5e7180}
+.assessment-strong{background:#e6f4eb;color:#276b4d}
+.assessment-medium{background:#fff1dd;color:#916018}
+.assessment-weak{background:#fcebe5;color:#9b513a}
+.assessment-insufficient-evidence{background:#edf1f4;color:#5e7180}
 .report-score{background:#eaf3f8;color:var(--blue)}
 .report-rubric,.report-uncertainty{font-size:11px;color:#778b96;line-height:1.6;margin:11px 0 0}
 .report-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 20px;margin:19px 0 0}
