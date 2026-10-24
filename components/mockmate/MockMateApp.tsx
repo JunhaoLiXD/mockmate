@@ -213,13 +213,11 @@ export function MockMateApp() {
                 );
                 setReport(null);
                 setReportError(
-                  !useMockVoice
-                    ? "Evidence-based evaluation is not connected yet. You can still review your transcript below."
-                    : hasSampleEvidence
-                      ? null
-                      : "The sample report needs the full scripted interview. Let all turns appear before ending, then try again.",
+                  useMockVoice && !hasSampleEvidence
+                    ? "The sample report needs the full scripted interview. Let all turns appear before ending, then try again."
+                    : null,
                 );
-                setReportStatus(useMockVoice && hasSampleEvidence ? "loading" : "error");
+                setReportStatus(!useMockVoice ? "unavailable" : hasSampleEvidence ? "loading" : "error");
                 setResult(r);
                 go("feedback");
               }}

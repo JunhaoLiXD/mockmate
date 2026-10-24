@@ -1,5 +1,5 @@
 import type { AnalyzeResponse, InterviewPlan } from "@/types";
-import { COMPANY_STYLE_DISCLAIMER, COMPANY_STYLES, INTERVIEW_MODES } from "@/types";
+import { INTERVIEW_MODES } from "@/types";
 
 export function PlanStep({
   analysis,
@@ -15,7 +15,6 @@ export function PlanStep({
   onEdit: () => void;
 }) {
   const repo = analysis.repository;
-  const styleLabel = COMPANY_STYLES.find((s) => s.value === plan.companyStyle)?.label ?? plan.companyStyle;
   const modeLabel = INTERVIEW_MODES.find((m) => m.value === plan.mode)?.label ?? plan.mode;
 
   return (
@@ -24,7 +23,7 @@ export function PlanStep({
         <div>
           <span className="section-kicker">02 / FIND YOUR ANGLE</span>
           <h2 id="plan-title">Your practice plan.</h2>
-          <p>Questions grounded in your role, your resume, and the code we inspected.</p>
+          <p>See the focus areas and the materials behind them. Specific questions stay private until you begin.</p>
         </div>
         <span className="heading-decoration" aria-hidden="true">
           ↗
@@ -54,40 +53,32 @@ export function PlanStep({
               <span className="mini-label">YOUR SESSION</span>
               <h3>{analysis.jobProfile.roleTitle}</h3>
               <p>
-                {styleLabel} · {modeLabel} · {plan.durationMinutes} minutes
+                {modeLabel} · {plan.durationMinutes} minutes
               </p>
-              <p className="company-angle">{COMPANY_STYLE_DISCLAIMER}</p>
             </div>
             <div className="duration">
-              <strong>{plan.questions.length}</strong>
-              <span>QUESTIONS</span>
+              <strong>{plan.durationMinutes}</strong>
+              <span>MINUTES</span>
             </div>
           </div>
 
-          {plan.questions.map((q, i) => {
-            const paths = q.sourceRefs.flatMap((ref) => (ref.kind === "repository" ? [ref.evidence] : []));
-            return (
-              <article key={q.id} className="question-card">
-                <div className="question-top">
-                  <span className="question-number">QUESTION 0{i + 1}</span>
-                  <span className="question-tag">{q.targetedSkill}</span>
+          <div className="plan-focus" aria-label="Interview focus areas">
+            <span className="mini-label">INTERVIEW FOCUS AREAS</span>
+            <p>One focus area per planned question. The interviewer may adapt to your answers.</p>
+            {plan.questions.map((question, index) => {
+              const codeSources = question.sourceRefs.filter((ref) => ref.kind === "repository");
+              return <article className="question-card" key={question.id}>
+                <h3>Topic {index + 1} · {question.targetedSkill}</h3>
+                <div className="focus-sources">
+                  <span className="mini-label">REPOSITORY REFERENCES</span>
+                  {codeSources.length ? <ul>{codeSources.map((ref, sourceIndex) => (
+                    <li key={sourceIndex}><code>{ref.evidence.path}</code>{ref.evidence.lineRange ? ` · lines ${ref.evidence.lineRange.start}–${ref.evidence.lineRange.end}` : " · line range unavailable"}</li>
+                  ))}</ul> : <p>No code reference for this focus area.</p>}
                 </div>
-                <h3>{q.prompt}</h3>
-                <p>{q.rationale}</p>
-                {paths.length > 0 && (
-                  <div className="path-preview">
-                    <span>Based on inspected code</span>
-                    {paths.map((ev) => (
-                      <code key={`${ev.path}-${ev.lineRange?.start ?? 0}`}>
-                        {ev.path}
-                        {ev.lineRange ? `:${ev.lineRange.start}-${ev.lineRange.end}` : ""}
-                      </code>
-                    ))}
-                  </div>
-                )}
-              </article>
-            );
-          })}
+              </article>;
+            })}
+            <p className="focus-note">Specific questions and follow-ups are revealed during the interview.</p>
+          </div>
 
           <div className="stage-actions">
             <button type="button" className="button button-primary" onClick={onStart}>
@@ -100,43 +91,33 @@ export function PlanStep({
         </div>
 
         <aside className="inspection-card">
-          <span className="mini-label">INSPECTION SCOPE</span>
-          <h3>What we inspected</h3>
-          <p>Every code-based question links back to a real file at a pinned commit.</p>
+          <span className="mini-label">SESSION INPUTS</span>
+          <h3>What shaped this session</h3>
+          <p>These are the materials used to shape the plan.</p>
           <div className="inspection-row">
             <span className="inspection-glyph">⌘</span>
             <div>
               <strong>Repository</strong>
-              <small>
-                {repo
-                  ? `${repo.owner}/${repo.name} @ ${repo.commitSha.slice(0, 7)} · ${repo.inspectedFiles.length} files read, ${repo.skippedFileCount} skipped`
-                  : "No repository analyzed"}
-              </small>
+              <small>{repo ? `${repo.owner}/${repo.name} @ ${repo.commitSha.slice(0, 12)}` : "No repository analyzed"}</small>
+              {repo && <ul className="inspection-list">{repo.inspectedFiles.map((file) => <li key={file.path}><code>{file.path}</code></li>)}</ul>}
             </div>
           </div>
-          {repo && (
-            <div className="path-preview">
-              {repo.inspectedFiles.map((f) => (
-                <code key={f.path}>{f.path}</code>
-              ))}
-            </div>
-          )}
           <div className="inspection-row">
             <span className="inspection-glyph">⌁</span>
             <div>
-              <strong>Job description</strong>
-              <small>{analysis.jobProfile.prioritySkills.join(" · ")}</small>
+              <strong>Job priorities</strong>
+              <small>{analysis.jobProfile.prioritySkills.length ? analysis.jobProfile.prioritySkills.join(" · ") : "No priority skills identified"}</small>
             </div>
           </div>
           <div className="inspection-row">
             <span className="inspection-glyph">▤</span>
             <div>
-              <strong>Resume</strong>
-              <small>{analysis.candidateProfile.projects.map((p) => p.name).join(" · ") || "No projects found"}</small>
+              <strong>Resume projects</strong>
+              <small>{analysis.candidateProfile.projects.length ? analysis.candidateProfile.projects.map((project) => project.name).join(" · ") : "No projects identified"}</small>
             </div>
           </div>
           {analysis.candidateProfile.limitations.length > 0 && (
-            <div className="inspection-foot">Not found: {analysis.candidateProfile.limitations.join(" ")}</div>
+            <div className="inspection-foot">Some details may be missing from the materials provided.</div>
           )}
         </aside>
       </div>

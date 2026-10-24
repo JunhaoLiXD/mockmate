@@ -1,8 +1,8 @@
-import type { FeedbackItem, InterviewReport, RepositoryEvidence, TranscriptTurn, TurnQuote } from "@/types";
-import { COMPANY_STYLE_DISCLAIMER, PRACTICE_DISCLAIMER, RUBRIC_CATEGORY_LABELS } from "@/types";
+import type { CategoryFeedback, FeedbackItem, InterviewReport, RepositoryEvidence, TranscriptTurn, TurnQuote } from "@/types";
+import { CATEGORIES_BY_MODE, COMPANY_STYLE_DISCLAIMER, PRACTICE_DISCLAIMER, RUBRIC_CATEGORY_LABELS } from "@/types";
 import type { RoomResult } from "./LiveRoom";
 
-export type ReportStatus = "loading" | "ready" | "error";
+export type ReportStatus = "loading" | "ready" | "unavailable" | "error";
 
 function Evidence({ quotes, files }: { quotes: TurnQuote[]; files: RepositoryEvidence[] }) {
   if (!quotes.length && !files.length) return null;
@@ -40,13 +40,82 @@ function FeedbackList({ title, items }: { title: string; items: FeedbackItem[] }
   );
 }
 
+function scoredValue(item: CategoryFeedback | undefined): number | null {
+  if (!item || (item.assessment !== "demonstrated" && item.assessment !== "partially-demonstrated")) return null;
+  if (!Number.isInteger(item.score) || item.score === undefined || item.score < 1 || item.score > 5) return null;
+  if (!item.rubric.trim() || !item.uncertainty.trim()) return null;
+  if (!item.quotes.some((quote) => quote.quote.trim() && item.evidenceTurnIds.includes(quote.turnId))) return null;
+  return item.score;
+}
+
+function unscoredReason(item: CategoryFeedback | undefined): string {
+  if (!item) return "No feedback for this category";
+  if (item.assessment === "not-assessed") return "Not assessed";
+  if (item.assessment === "insufficient-evidence") return "Insufficient evidence";
+  return "No valid evidence-backed numeric score";
+}
+
+function ScoreSummary({ report, isSample }: { report: InterviewReport; isSample: boolean }) {
+  const categories = CATEGORIES_BY_MODE[report.mode].map((category) => {
+    const feedback = report.categoryFeedback.find((item) => item.category === category);
+    return { category, feedback, score: scoredValue(feedback) };
+  });
+  const scored = categories.filter((item) => item.score !== null);
+  const overall = scored.length >= 2
+    ? Math.round(scored.reduce((sum, item) => sum + ((item.score ?? 1) - 1) * 25, 0) / scored.length)
+    : null;
+  const scoreTitle = overall === null ? "Practice score unavailable" : scored.length < categories.length ? "Provisional practice score" : "Overall practice score";
+
+  return (
+    <section className="score-summary" aria-labelledby="score-summary-title">
+      <div className="score-hero">
+        <div className="score-hero-top">
+          <div><span className="score-kicker">{isSample ? "SAMPLE REPORT · SCRIPTED ANSWERS" : "RUBRIC-BASED PRACTICE SCORE"}</span><h3 id="score-summary-title">{scoreTitle}</h3></div>
+        </div>
+        <div className="score-reading">
+          <strong>{overall ?? "—"}</strong><span>/ 100</span>
+          <span className="score-coverage">Based on {scored.length} of {categories.length} categories</span>
+        </div>
+        <div className="score-track" role="img" aria-label={overall === null ? "Practice score unavailable" : `${scoreTitle} ${overall} out of 100, based on ${scored.length} of ${categories.length} categories`}>
+          {overall !== null && <span style={{ width: `${overall}%` }} />}
+        </div>
+        <div className="score-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+        <p>{overall === null
+          ? "Overall score unavailable: at least two categories need evidence-backed scores."
+          : "Each scored category maps 1–5 to 0–100 as (score − 1) × 25. Equal average, rounded; unscored categories excluded."}</p>
+      </div>
+      <div className="score-factors">
+        <div className="score-factors-heading"><h4>Category scores</h4><span>Scroll for the evidence and detailed feedback ↓</span></div>
+        <div className="score-factor-list">
+          {categories.map(({ category, feedback, score }) => (
+            <div className="score-factor" key={category}>
+              <div><strong>{RUBRIC_CATEGORY_LABELS[category]}</strong><span>{score !== null ? "Based on cited answers" : unscoredReason(feedback)}</span></div>
+              <span className={score === null ? "score-factor-value is-unscored" : "score-factor-value"}>{score === null ? "Unscored" : `${(score - 1) * 25} / 100`}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="score-caveat">A practice snapshot with limited evidence. It is not an employer rating or hiring prediction.</p>
+    </section>
+  );
+}
+
 function Report({ report, isSample }: { report: InterviewReport; isSample: boolean }) {
+  const demonstrated = report.categoryFeedback.filter((item) => item.assessment === "demonstrated").length;
+  const needsWork = report.categoryFeedback.filter((item) => item.assessment === "partially-demonstrated").length;
   return (
     <div className="report-content">
+      <ScoreSummary report={report} isSample={isSample} />
       <div className="report-heading">
         <span className="mini-label">{isSample ? "SAMPLE REPORT · SCRIPTED ANSWERS" : "EVIDENCE-BASED FEEDBACK"}</span>
         <h3>Your practice report</h3>
         <p>{isSample ? "This demo report uses sample answers and repository evidence. It is not an evaluation of your own interview." : "Scores appear only when your answers provide enough evidence. This report is based on a limited practice session."}</p>
+      </div>
+
+      <div className="report-overview" aria-label="Report overview">
+        <div><strong>{demonstrated}</strong><span>Demonstrated</span></div>
+        <div><strong>{needsWork}</strong><span>Partially demonstrated</span></div>
+        <div><strong>{report.recommendedPractice.length}</strong><span>Practice steps</span></div>
       </div>
 
       <section className="report-section" aria-label="Rubric feedback">
@@ -62,7 +131,7 @@ function Report({ report, isSample }: { report: InterviewReport; isSample: boole
                       : category.assessment === "insufficient-evidence" ? "Insufficient evidence"
                         : category.assessment === "not-assessed" ? "Not assessed" : "Demonstrated"}
                   </span>
-                  {category.score !== undefined && <span className="report-score">{category.score} / 5</span>}
+                  {scoredValue(category) !== null && <span className="report-score">{scoredValue(category)} / 5</span>}
                 </div>
               </div>
               <p className="report-rubric">Rubric: {category.rubric}</p>
@@ -130,22 +199,14 @@ export function FeedbackStep({
       <div className="stage-heading">
         <div>
           <span className="section-kicker">04 / REVIEW</span>
-          <h2 id="feedback-title">Review your interview.</h2>
-          <p>Your feedback and full transcript, with every turn labeled.</p>
+          <h2 id="feedback-title">Your interview review.</h2>
+          <p>Review the report when available, then revisit the full transcript below.</p>
         </div>
         <span className="heading-decoration" aria-hidden="true">✦</span>
       </div>
 
       <div className="feedback-grid">
         <div className="feedback-main">
-          <div className="feedback-intro">
-            <div className="feedback-orb">↗</div>
-            <div>
-              <span className="mini-label">PRACTICE RECAP</span>
-              <h3>{result.endReason === "time-limit" ? "Time's up — nice work." : "Interview complete."}</h3>
-              <p>{result.turns.length} turns captured · {answered} complete answers</p>
-            </div>
-          </div>
           {reportStatus === "loading" && (
             <div className="report-state" role="status" aria-live="polite">
               <span className="report-spinner" aria-hidden="true" />
@@ -158,7 +219,21 @@ export function FeedbackStep({
               <p>{reportError ?? "We could not prepare feedback for this session. Your transcript is still available below."}</p>
             </div>
           )}
+          {reportStatus === "unavailable" && (
+            <div className="report-state" role="status">
+              <strong>Report not connected yet</strong>
+              <p>Your live interview transcript is available below. Evidence-based feedback for live sessions is coming soon.</p>
+            </div>
+          )}
           {reportStatus === "ready" && report && <Report report={report} isSample={isSample} />}
+          <div className="feedback-intro">
+            <div className="feedback-orb">↗</div>
+            <div>
+              <span className="mini-label">PRACTICE RECAP</span>
+              <h3>{result.endReason === "time-limit" ? "Time's up — nice work." : "Interview complete."}</h3>
+              <p>{result.turns.length} turns captured · {answered} complete answers</p>
+            </div>
+          </div>
           <section className="report-transcript-section" aria-label="Full transcript">
             <div className="report-transcript-heading"><h3>Full transcript</h3><span>{result.turns.length} turns</span></div>
             <div className="transcript feedback-transcript">
@@ -180,9 +255,9 @@ export function FeedbackStep({
           </div>
         </div>
         <aside className="feedback-side">
-          <span className="mini-label">EVALUATION STATUS</span>
+          <span className="mini-label">{isSample ? "SAMPLE EVALUATION" : "EVALUATION STATUS"}</span>
           <h3>Keep practicing.</h3>
-          <p>{isSample ? "This sample report reflects scripted turns and example code evidence." : "Feedback reflects only what was said in this session and the code evidence available to the interviewer."}</p>
+          <p>{isSample ? "The example feedback reflects scripted answers and example code evidence." : "Evidence-based feedback for live sessions is not connected yet. Your transcript remains available for review."}</p>
           <div className="aside-rule" />
           <p className="disclaimer">{PRACTICE_DISCLAIMER}</p>
           <p className="disclaimer">{COMPANY_STYLE_DISCLAIMER}</p>
