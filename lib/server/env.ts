@@ -4,6 +4,10 @@ export interface ServerEnv {
   realtimeModel: string | undefined;
   transcribeModel: string | undefined;
   realtimeVoice: string;
+  plannerModel: string | undefined;
+  evaluatorModel: string | undefined;
+  /** Fine-grained, read-only token for public repositories. Optional: without it GitHub allows 60 requests/hour. */
+  githubToken: string | undefined;
   aiEnabled: boolean;
   voiceEnabled: boolean;
 }
@@ -24,6 +28,9 @@ export function getServerEnv(): ServerEnv {
     realtimeModel: optional(process.env.REALTIME_MODEL),
     transcribeModel: optional(process.env.TRANSCRIBE_MODEL),
     realtimeVoice: optional(process.env.REALTIME_VOICE) ?? "marin",
+    plannerModel: optional(process.env.PLANNER_MODEL),
+    evaluatorModel: optional(process.env.EVALUATOR_MODEL),
+    githubToken: optional(process.env.GITHUB_TOKEN),
     aiEnabled: flag(process.env.AI_ENABLED),
     voiceEnabled: flag(process.env.VOICE_ENABLED),
   };
