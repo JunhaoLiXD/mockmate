@@ -101,3 +101,7 @@
 .question-card .path-preview{padding:12px 0 0}
 .plan-question-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .feedback-transcript{padding:12px 25px}
+.path-preview code{max-width:100%;overflow-wrap:anywhere;word-break:break-all}
+.transcript>*{flex-shrink:0}
+.feedback-transcript{max-height:none}
+.room-live.is-mock{color:#b05a2c}

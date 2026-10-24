@@ -114,12 +114,12 @@ function LiveRoomView({
               m<span>.</span>
             </div>
             <div>
-              <strong>MockMate interviewer</strong>
+              <strong>MockMate interviewer{isMock && " (mock)"}</strong>
               <small aria-live="polite">{STATUS[state].text}</small>
             </div>
-            <span className={`room-live${live ? " is-live" : ""}`}>
+            <span className={`room-live${live ? " is-live" : ""}${isMock ? " is-mock" : ""}`}>
               {live && <span></span>}
-              {STATUS[state].pill}
+              {isMock ? `MOCK · ${STATUS[state].pill}` : STATUS[state].pill}
             </span>
           </div>
 
@@ -154,7 +154,7 @@ function LiveRoomView({
 
             {canStart && (
               <div className="stage-start">
-                <strong>Ready for your interview?</strong>
+                <strong>{isMock ? "Mock interview (scripted, no microphone)" : "Ready for your interview?"}</strong>
                 <p>
                   {plan.questions.length} planned questions · up to {Math.round(maxDurationSeconds / 60)} minutes. Your
                   browser will ask for microphone access.
