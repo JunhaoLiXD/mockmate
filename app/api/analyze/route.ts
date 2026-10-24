@@ -151,7 +151,8 @@ export async function POST(request: Request): Promise<Response> {
     const response: AnalyzeResponse = buildAnalyzeResponse({ output, companyStyle, repository, warnings });
     return Response.json(response);
   } catch (error) {
-    releaseRateLimit(ipKey);
+    // Refund only when OpenAI rejected the request; timeouts and cut-off outputs were billed.
+    if (error instanceof AiError && error.kind === "upstream") releaseRateLimit(ipKey, limit.slotId);
     if (error instanceof AiError) {
       if (error.kind === "timeout") return apiError(504, "UPSTREAM_ERROR", "The analysis took too long. Please try again.");
       if (error.kind === "refusal") return apiError(422, "INVALID_INPUT", "This input couldn't be analyzed. Please check the job description and resume.");

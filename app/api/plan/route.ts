@@ -78,13 +78,13 @@ export async function POST(request: Request): Promise<Response> {
     const { plan, droppedQuestions } = buildInterviewPlan(planRequest, output, sources);
     if (droppedQuestions > 0) console.error("[api/plan] dropped questions without a valid source:", droppedQuestions);
     if (plan.questions.length < 2) {
-      releaseRateLimit(ipKey);
       return apiError(502, "UPSTREAM_ERROR", "The plan came back incomplete. Please try again.");
     }
     const response: PlanResponse = { plan };
     return Response.json(response);
   } catch (error) {
-    releaseRateLimit(ipKey);
+    // Refund only when OpenAI rejected the request; timeouts and cut-off outputs were billed.
+    if (error instanceof AiError && error.kind === "upstream") releaseRateLimit(ipKey, limit.slotId);
     if (error instanceof AiError) {
       if (error.kind === "timeout") return apiError(504, "UPSTREAM_ERROR", "Planning took too long. Please try again.");
       if (error.kind === "refusal") return apiError(422, "INVALID_INPUT", "This input couldn't be used to plan an interview.");
