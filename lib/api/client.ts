@@ -10,6 +10,8 @@ import type {
   ApiErrorCode,
   PlanRequest,
   PlanResponse,
+  ReportRequest,
+  ReportResponse,
 } from "@/types";
 import { API_ROUTES } from "@/types";
 
@@ -69,6 +71,15 @@ export function analyzeProfile(fields: AnalyzeFormFields, signal?: AbortSignal):
 export function createPlan(body: PlanRequest, signal?: AbortSignal): Promise<PlanResponse> {
   return request<PlanResponse>(
     API_ROUTES.plan,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
+    signal,
+  );
+}
+
+/** Generates the feedback report after a real interview. Takes about 20 seconds. */
+export function generateReport(body: ReportRequest, signal?: AbortSignal): Promise<ReportResponse> {
+  return request<ReportResponse>(
+    API_ROUTES.report,
     { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
     signal,
   );
