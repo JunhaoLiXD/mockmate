@@ -46,6 +46,12 @@ export function PlanStep({
           <p>{analysis.warnings.join(" ")}</p>
         </div>
       )}
+      {!repo && (
+        <div className="notice">
+          <span>✳</span>
+          <p>No public repository was analyzed. Your questions use the resume and job description.</p>
+        </div>
+      )}
 
       <div className="plan-grid">
         <div className="plan-main">
@@ -100,7 +106,7 @@ export function PlanStep({
             <span className="inspection-glyph">⌘</span>
             <div>
               <strong>Repository</strong>
-              <small>{repo ? `${repo.owner}/${repo.name} @ ${repo.commitSha.slice(0, 12)}` : "No repository analyzed"}</small>
+              <small>{repo ? `${repo.owner}/${repo.name} @ ${repo.commitSha.slice(0, 12)}` : "Using resume and job description"}</small>
               {repo && <ul className="inspection-list">{repo.inspectedFiles.map((file) => <li key={file.path}><code>{file.path}</code></li>)}</ul>}
             </div>
           </div>

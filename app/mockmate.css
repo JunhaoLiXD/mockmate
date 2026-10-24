@@ -109,6 +109,7 @@
 /* Review report */
 .feedback-main,.feedback-side{min-width:0}
 .report-content{padding:0 25px 14px}
+.field-optional{font-weight:500;color:#87969e}
 .score-summary{margin:24px 0 8px;border:1px solid #dce7ec;border-radius:15px;overflow:hidden;background:#fff}
 .score-hero{background:#234c78;color:#fff;padding:25px 28px 21px}
 .score-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}

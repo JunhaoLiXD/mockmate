@@ -227,7 +227,7 @@ export function MockMateApp() {
               busyHint={
                 phase === "planning"
                   ? "Step 2 of 2: drafting questions from what we found. This usually takes about 20 seconds."
-                  : "Step 1 of 2: reading the job description, your resume and your repository. This usually takes about 20 seconds."
+                  : "Step 1 of 2: reading the job description and resume, plus a public repository if available. This usually takes about 20 seconds."
               }
               submitError={submitError}
             />

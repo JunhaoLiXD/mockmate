@@ -2,6 +2,7 @@ import type { AnalyzeResponse, CompanyStyle, InterviewMode } from "@/types";
 import { COMPANY_STYLES, GITHUB_REPO_URL_PATTERN, INPUT_LIMITS, INTERVIEW_MODES, RATE_LIMITS } from "@/types";
 import { buildAnalyzeResponse } from "@/lib/analyze/buildResponse";
 import { ANALYZE_INSTRUCTIONS, buildAnalyzeInput } from "@/lib/analyze/prompt";
+import { findResumeRepositoryUrl } from "@/lib/analyze/resumeRepository";
 import { analysisOutputSchema } from "@/lib/analyze/schema";
 import { AiError, generateStructured } from "@/lib/ai/structured";
 import { fetchRepository, GitHubError, type FetchedRepository } from "@/lib/github/repository";
@@ -114,10 +115,13 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
+  const resumeRepoUrl = repoUrl ? null : findResumeRepositoryUrl(resumeText);
+  const selectedRepoUrl = repoUrl || resumeRepoUrl;
   let repository: FetchedRepository | null = null;
-  if (repoUrl) {
+  if (selectedRepoUrl) {
     try {
-      repository = await fetchRepository(repoUrl, env.githubToken);
+      repository = await fetchRepository(selectedRepoUrl, env.githubToken);
+      if (resumeRepoUrl) warnings.push("Used a public GitHub repository linked in your resume.");
       warnings.push(...repository.warnings);
     } catch (error) {
       if (!(error instanceof GitHubError)) throw error;
