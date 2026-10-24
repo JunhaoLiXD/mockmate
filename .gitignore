@@ -23,6 +23,22 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+desktop.ini
+
+# editors
+.vscode/
+.idea/
+
+# local logs and caches
+*.log
+.eslintcache
+
+# demo recordings (upload to YouTube/Devpost, never commit)
+/recordings/
+*.mp4
+*.mov
+*.webm
 
 # debug
 npm-debug.log*
@@ -37,9 +53,11 @@ yarn-error.log*
 # vercel
 .vercel
 
-# claude code (personal, per-machine)
+# claude code (personal, per-machine; shared team settings stay in .claude/settings.json)
 .claude/settings.local.json
 .claude/journal/
+.claude/launch.json
+.claude/skills/
 
 # typescript
 *.tsbuildinfo
