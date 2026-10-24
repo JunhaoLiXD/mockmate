@@ -1,0 +1,57 @@
+[Demo job description. Fictional company and role created for MockMate AI practice.]
+
+Computer Vision Engineer (Entry Level), Computational Imaging Lab
+Quillmoor Biosciences (fictional) | Boston, MA (Hybrid) | Full-time
+
+ABOUT QUILLMOOR
+Quillmoor Biosciences builds automated microscopy systems that photograph
+living cells thousands of times a day. Our software measures how cells grow,
+divide, move, and respond to drugs, and our pharmaceutical partners use these
+measurements to decide which drug candidates move forward. That means our
+image analysis has to be accurate, reproducible, and fast.
+
+ABOUT THE TEAM
+The Computational Imaging Lab is an 8-person team of biologists, machine
+learning researchers, and engineers, led by Dr. Albert Hale. We turn raw,
+noisy microscope images into clean, trustworthy data that scientists can use
+every morning.
+
+WHAT YOU'LL DO
+- Build and improve image-enhancement tools for microscopy images, including
+  contrast correction, low-light enhancement, and denoising.
+- Combine classical image processing (for example histogram equalization and
+  edge-preserving filters) with deep learning models where they help.
+- Turn research prototypes into reliable, modular pipelines that run every
+  night on new data.
+- Build and maintain internal web tools and APIs that let scientists upload
+  images, choose processing steps, and download results.
+- Design evaluations that show a method works on real lab data, not just on a
+  benchmark, and explain the results clearly to biologists.
+- Choose methods that work on real lab data under time limits, and document
+  the trade-offs.
+
+BASIC QUALIFICATIONS
+- Bachelor's degree in Computer Science, Electrical Engineering, or a related
+  field (new graduates welcome).
+- Strong programming skills in Python.
+- Experience with image processing using OpenCV and NumPy.
+- Experience training or using deep learning models with PyTorch.
+- Understanding of core data structures, algorithms, and software design.
+- Experience with Git.
+
+PREFERRED QUALIFICATIONS
+- Experience building REST APIs (for example with FastAPI or Flask).
+- Experience building a front end with React or TypeScript.
+- Experience deploying an application to a cloud service.
+- Experience with low-light enhancement, denoising, or image restoration.
+- Ability to explain technical results to people without a technical
+  background.
+- Interest in biology or scientific imaging (no biology background required).
+
+WHAT WE VALUE
+- Real understanding of what you built, beyond knowing how to call a library.
+- Honest evaluation: knowing how and why a method fails.
+- Clear thinking about trade-offs between quality, speed, and cost.
+- Clear communication with teammates from different backgrounds.
+
+This is a fictional job posting for interview practice only.

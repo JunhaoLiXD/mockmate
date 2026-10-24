@@ -1,0 +1,71 @@
+JORDAN LEE
+Gainesville, FL | jordan.lee@example.com | (352) 555-0142
+GitHub: github.com/JunhaoLiXD/vision-enhance-platform (featured project)
+
+[Demo resume. Fictional candidate created for MockMate AI practice. All personal details are invented.]
+
+EDUCATION
+Lakeview State University (fictional)                         Graduated May 2026
+B.S. in Computer Science, Minor in Mathematics
+GPA: 3.42 / 4.00
+Relevant coursework: Data Structures and Algorithms, Computer Vision,
+Machine Learning, Database Systems, Software Engineering, Linear Algebra,
+Probability and Statistics
+
+TECHNICAL SKILLS
+Languages:      Python, TypeScript, JavaScript, Java, SQL
+CV / ML:        OpenCV, NumPy, PyTorch, TorchVision, Pillow, scikit-learn
+Web / Backend:  FastAPI, Uvicorn, React, Vite, Tailwind CSS, REST APIs
+Tools:          Git, GitHub, Linux, conda, Vercel, Render
+
+PROJECTS
+
+Vision Enhance Platform                                           2025 - 2026
+Full-stack image enhancement web app | Python, FastAPI, PyTorch, OpenCV, React, TypeScript
+- Built a web app where users upload an image, choose a preset or build a
+  custom multi-step pipeline, and download the enhanced result.
+- Implemented five classical enhancement algorithms (gamma correction, CLAHE,
+  multi-scale Retinex, bilateral filtering, unsharp masking) and integrated a
+  pretrained Zero-DCE deep learning model for low-light enhancement.
+- Designed a plugin-based pipeline engine with a shared float32 image format,
+  so each algorithm declares its own parameters and new algorithms can be
+  added without changing the core engine.
+- Built an asynchronous job API in FastAPI with background tasks and status
+  polling, plus job workspaces that store status and manifest files.
+- Loaded model weights once per process to avoid reloading on every request.
+- Deployed the React + TypeScript frontend on Vercel and the backend on Render.
+
+Course Project: Handwritten Digit Classifier (Machine Learning course)   Fall 2024
+Python, PyTorch, scikit-learn
+- Trained a small convolutional neural network on the MNIST dataset and
+  compared it with a logistic regression baseline.
+- Reached 98.9% test accuracy with the CNN vs. 92.4% with the baseline;
+  used a confusion matrix to analyze the most common mistakes.
+
+Course Project: Campus Study Room Finder (Software Engineering course)  Spring 2025
+Java, SQL, team of 4
+- Built a web app that lets students search and reserve study rooms.
+- Owned the database schema and search queries; wrote unit tests for the
+  reservation logic.
+
+EXPERIENCE
+
+Software Engineering Intern                                 May 2025 - Aug 2025
+Brightwater Data Services (fictional), Remote
+- Wrote Python scripts to clean and validate CSV data exported from client
+  systems, replacing a manual spreadsheet check.
+- Added unit tests for existing data-validation functions and fixed bugs found
+  during code review.
+- Presented a summary of data-quality issues to non-technical account managers
+  at the end of the internship.
+
+Undergraduate Teaching Assistant, Intro to Programming (Python)   Aug 2024 - May 2026
+Lakeview State University
+- Held weekly office hours for about 30 students and graded programming
+  assignments.
+- Explained debugging steps to beginners who had never written code before.
+
+ADDITIONAL
+- Hackathon participant (2025): built a simple web app with a team of three
+  in 36 hours.
+- Interests: photography, hiking
