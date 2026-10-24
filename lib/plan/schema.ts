@@ -8,9 +8,12 @@ import { CATEGORIES_BY_MODE } from "@/types";
  * cannot invent file paths or commits. Question IDs are assigned by the server.
  */
 
-/** Questions that fit the interview length, leaving time for a greeting and follow-ups. */
+/**
+ * Planned questions that fit the interview length. About 1.5 minutes go to the greeting and
+ * self-introduction (asked by the interviewer, not planned), so 5 minutes gives 2 questions.
+ */
 export function questionCountFor(durationMinutes: number): number {
-  return Math.min(5, Math.max(2, Math.round(durationMinutes * 0.6)));
+  return Math.min(5, Math.max(2, Math.round((durationMinutes - 1.5) * 0.6)));
 }
 
 export function planOutputSchema(mode: InterviewMode, questionCount: number) {

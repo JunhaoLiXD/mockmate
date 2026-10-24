@@ -69,6 +69,8 @@ export function buildInterviewPlan(
     plan: {
       mode: request.mode,
       companyStyle: request.companyStyle,
+      roleTitle: clip(request.jobProfile.roleTitle, 120),
+      ...(request.jobProfile.companyName ? { companyName: clip(request.jobProfile.companyName, 120) } : {}),
       durationMinutes: request.durationMinutes,
       questions,
       coverageGoals: output.coverageGoals.map((g) => clip(g, 120)).filter(Boolean),

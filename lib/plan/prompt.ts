@@ -1,18 +1,13 @@
+import "server-only";
+
 import type { CompanyStyle, InterviewMode, RepositoryEvidence } from "@/types";
+import { getCompanyStyleGuide } from "@/lib/content";
 import type { ValidPlanRequest } from "./requestSchema";
 
 /**
- * Planner instructions and input for /api/plan.
- * TODO: replace the temporary style and mode notes with Lisa's content/company-styles.md and
- * rubric files once delivered, without changing their meaning.
+ * Planner instructions and input for /api/plan. The company style comes from Lisa's
+ * content/company-styles.md, used as written.
  */
-
-const STYLE_FOCUS: Record<CompanyStyle, string> = {
-  "general-tech":
-    "General Tech style: balanced focus on problem solving, implementation detail, debugging and clear communication. Follow up on how and why.",
-  "amazon-style":
-    "Amazon-style practice (unofficial): focus on ownership, concrete actions, measurable results and trade-offs under constraints. Follow up on what the candidate personally did and what happened.",
-};
 
 const MODE_FOCUS: Record<InterviewMode, string> = {
   technical:
@@ -25,13 +20,17 @@ export function buildPlanInstructions(mode: InterviewMode, companyStyle: Company
   return `You design a short mock interview plan for a practice tool. The plan is used by a voice interviewer.
 
 ${MODE_FOCUS[mode]}
-${STYLE_FOCUS[companyStyle]}
+
+Company style guide (unofficial practice; shapes focus areas and follow-ups):
+${getCompanyStyleGuide(companyStyle)}
 
 Plan rules:
-- Write exactly ${questionCount} questions, in the order they should be asked. The first one is a short warm-up about the candidate's main project.
+- The interviewer always opens with a short self-introduction question. Do not write a self-introduction or warm-up question.
+- Write exactly ${questionCount} questions, in the order they should be asked after the self-introduction.
 - Each question is one spoken question of at most two sentences. No multi-part questions, no answers, no hints.
+- Questions are read aloud. Never include file paths, file names, file extensions, function or variable names, or code. Refer to code by what it does, for example "your inference step" or "the job queue in your backend". The app shows the cited files to the candidate separately.
 - Every question must cite at least one source by ID from the input: job requirements (r#), resume claims (c#) or repository evidence (e#). Use kind "company-style" with refId null only in addition to a real source.
-${hasRepository && mode === "technical" ? "- At least two questions must cite repository evidence (e#) and mention the specific file or function it refers to.\n" : ""}- Only state facts that appear in the cited sources. If a detail is unknown, ask the candidate to explain it instead of assuming it.
+${hasRepository && mode === "technical" ? "- At least one question, ideally every question, must cite repository evidence (e#) and ask about the design choice, trade-off or failure mode that evidence shows.\n" : ""}- Only state facts that appear in the cited sources. If a detail is unknown, ask the candidate to explain it instead of assuming it.
 - Follow-up hints describe what to probe depending on the answer. Keep them short.
 - Rubric signals are specific to the question, not generic.
 
