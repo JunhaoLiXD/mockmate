@@ -44,6 +44,7 @@ export function MockMateApp() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const reportRequestRef = useRef<AbortController | null>(null);
+  const loadingDialogRef = useRef<HTMLDialogElement | null>(null);
   const busy = phase !== "idle";
   const [useMockVoice, setUseMockVoice] = useState(false);
   const [roomKey, setRoomKey] = useState(0);
@@ -53,6 +54,13 @@ export function MockMateApp() {
     requestRef.current?.abort();
     reportRequestRef.current?.abort();
   }, []);
+
+  useEffect(() => {
+    const dialog = loadingDialogRef.current;
+    if (!dialog) return;
+    if (busy && !dialog.open) dialog.showModal();
+    if (!busy && dialog.open) dialog.close();
+  }, [busy]);
 
   useEffect(() => {
     if (!result || !useMockVoice || reportStatus !== "loading") return;
@@ -284,6 +292,34 @@ export function MockMateApp() {
         <HowItWorks />
       </main>
       <SiteFooter />
+      <dialog
+        ref={loadingDialogRef}
+        className="analysis-dialog"
+        aria-labelledby="analysis-dialog-title"
+        aria-describedby="analysis-dialog-description"
+        onCancel={(event) => event.preventDefault()}
+      >
+        <div className="analysis-dialog-icon" aria-hidden="true">✦</div>
+        <span className="section-kicker">BUILDING YOUR PRACTICE PLAN</span>
+        <h2 id="analysis-dialog-title">Getting things ready…</h2>
+        <p id="analysis-dialog-description" role="status" aria-live="polite">
+          {phase === "planning"
+            ? "Writing questions based on your experience and the role."
+            : "Reading your job description and resume, plus a public repository if available."}
+        </p>
+        <div className="analysis-dialog-progress" aria-hidden="true"><span /></div>
+        <ol className="analysis-dialog-steps" aria-label="Preparation progress">
+          <li className={phase === "analyzing" ? "active" : "complete"}>
+            <span aria-hidden="true">{phase === "planning" ? "✓" : "1"}</span>
+            Read your materials
+          </li>
+          <li className={phase === "planning" ? "active" : ""}>
+            <span aria-hidden="true">2</span>
+            Write interview questions
+          </li>
+        </ol>
+        <p className="analysis-dialog-note">This can take about 40 seconds. Please keep this tab open.</p>
+      </dialog>
     </div>
   );
 }
