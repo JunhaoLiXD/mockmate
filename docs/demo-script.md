@@ -19,11 +19,11 @@
 **On screen:**
 1. Paste the demo job description: Computer Vision Engineer at Quillmoor Biosciences.
 2. Upload the demo resume.
-3. Paste the GitHub link. Choose `Technical` and `General Tech`. Click Analyze.
-4. Show the analysis page: the list of inspected files and a question with its file evidence.
+3. Paste the GitHub link. Choose `Technical` and `General Tech`. Click "Build my practice plan".
+4. Show the plan page: the inspected files and the focus areas, each with the code files behind it. The exact questions stay private until the interview.
 
 **Narration:**
-"Here's Jordan, a new graduate applying for a computer vision role. Jordan adds the job description, a resume, and a public GitHub project. MockMate reads the repository and shows exactly which files it inspected. Every planned question is tied to the job and to real code. This one comes from the Zero-DCE low-light enhancement plugin."
+"Here's Jordan, a new graduate applying for a computer vision role. Jordan adds the job description, a resume, and a public GitHub project. MockMate reads the repository and shows exactly which files it inspected. Every focus area is tied to the job and to real code, like this one from the Zero-DCE low-light enhancement plugin. The exact questions stay private until the interview starts, just like a real one."
 
 ## 1:00–2:10 Live voice interview
 
@@ -42,10 +42,10 @@
 
 ## 2:10–2:40 Evidence-based report
 
-**On screen:** End the interview, then show the report page. Highlight one dimension with a transcript quote and a file path.
+**On screen:** End the interview, then show the report page. Show the practice score at the top, then highlight one dimension with a transcript quote and a file path.
 
 **Narration:**
-"When the interview ends, a separate AI writes the feedback. Every comment quotes the candidate's own words and, for project facts, points to the exact file. If the evidence isn't there, the report says so instead of guessing. It ends with what to practice next."
+"When the interview ends, a separate AI writes the feedback. The practice score only appears when there is enough evidence, and it says what it's based on. Every comment quotes the candidate's own words and, for project facts, points to the exact file. If the evidence isn't there, the report says so instead of guessing. It ends with what to practice next."
 
 ## 2:40–3:00 How it's built, cost, privacy, limits
 

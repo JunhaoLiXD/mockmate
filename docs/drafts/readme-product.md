@@ -17,7 +17,7 @@ Technical interviews rarely stop at definitions. Interviewers ask *why* you chos
 
 1. **Reads your materials:** paste a job description, upload your resume (PDF or text), and add a public GitHub repository.
 2. **Studies your project:** MockMate reads the repository's README, file structure, and a few key source files, and records exactly which files it inspected.
-3. **Plans the interview:** it prepares questions linked to the job's requirements and to real details in your code. You can preview the plan before you start.
+3. **Plans the interview:** it prepares questions linked to the job's requirements and to real details in your code. Before you start, you see the focus areas and the code files behind each one; the exact questions stay private until the interview, like a real one.
 4. **Interviews you by voice:** a realistic AI interviewer talks with you in real time. You can interrupt, ask it to repeat, and it follows up on what you actually said.
 5. **Gives evidence-based feedback:** after the interview, you get a report. Each point quotes your own words from the transcript and, for project facts, points to the file it came from.
 
@@ -28,6 +28,7 @@ Technical interviews rarely stop at definitions. Interviewers ask *why* you chos
 - Real-time voice conversation in the browser, with no app to install.
 - A full transcript with clear speaker labels.
 - Feedback by dimension: what you demonstrated, what remains unclear, why it matters for the job, how to explain it better, and a next practice question.
+- A provisional 0–100 practice score, shown only when at least two dimensions have evidence-backed scores, with the formula and its coverage explained.
 - Transparent analysis: you can see which repository files the AI inspected.
 
 ## How It Works (non-technical)
