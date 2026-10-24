@@ -38,6 +38,10 @@ export interface InterviewQuestion {
 export interface InterviewPlan {
   mode: InterviewMode;
   companyStyle: CompanyStyle;
+  /** Role title from the job description, used in the interviewer's greeting. */
+  roleTitle: string;
+  /** Company named in the job description, if any. The interviewer never claims to work there. */
+  companyName?: string;
   durationMinutes: number;
   questions: InterviewQuestion[];
   coverageGoals: string[];
