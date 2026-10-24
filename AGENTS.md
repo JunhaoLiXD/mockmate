@@ -63,6 +63,8 @@ Tool-enforced versions of the git and install rules live in `.claude/settings.js
 
 Before proposing a commit, check the diff for secrets and confirm all new text is in English.
 
+Release checks live in `docs/release-checklist.md`. Run the sections its "When to run what" table assigns to the situation (for example, the quick check before every push to `main`); use its voice diagnosis section only when voice breaks. The checklist reports results; Jerry decides on fixes and integrates into `main`, and commits and pushes still follow section 3.
+
 ## 8. Ownership
 
 Change only files your role owns. If you need a change elsewhere, tell the user who to ask.
