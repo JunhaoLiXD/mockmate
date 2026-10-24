@@ -4,15 +4,14 @@
  * Four-step MockMate flow: Prepare -> Plan -> Interview -> Review.
  * All interview data stays in this tab (stateless API design, brief section 9.2).
  *
- * Analysis and planning call POST /api/analyze, then POST /api/plan. With ?mock=1 the sample
- * analysis and plan are used instead, so the UI can be worked on without paid API calls.
- * TODO(M4): connect the report view to POST /api/report.
+ * Analysis, planning, and reporting use the API for live sessions. With ?mock=1 the sample
+ * data is used instead, so the UI can be worked on without paid API calls.
  */
 
 import { useEffect, useRef, useState } from "react";
 import type { AnalyzeResponse, InterviewPlan, InterviewReport } from "@/types";
 import { SESSION_LIMITS } from "@/types";
-import { analyzeProfile, createPlan, describeApiError } from "@/lib/api/client";
+import { ApiClientError, analyzeProfile, createPlan, describeApiError, generateReport } from "@/lib/api/client";
 import { mockAnalyzeResponse, mockDelay } from "@/mocks/api";
 import { mockPlan } from "@/mocks/plan";
 import { mockReport } from "@/mocks/report";
@@ -44,12 +43,16 @@ export function MockMateApp() {
   const [isSample, setIsSample] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const reportRequestRef = useRef<AbortController | null>(null);
   const busy = phase !== "idle";
   const [useMockVoice, setUseMockVoice] = useState(false);
   const [roomKey, setRoomKey] = useState(0);
 
-  // Cancel an in-flight analysis if the page goes away.
-  useEffect(() => () => requestRef.current?.abort(), []);
+  // Cancel in-flight requests if the page goes away.
+  useEffect(() => () => {
+    requestRef.current?.abort();
+    reportRequestRef.current?.abort();
+  }, []);
 
   useEffect(() => {
     if (!result || !useMockVoice || reportStatus !== "loading") return;
@@ -81,8 +84,42 @@ export function MockMateApp() {
     document.getElementById("workflow")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const runReport = async (finished: RoomResult) => {
+    reportRequestRef.current?.abort();
+    setReport(null);
+    setReportError(null);
+    if (!plan || !analysis) {
+      setReportError("We could not prepare this report. Please start another interview.");
+      setReportStatus("error");
+      return;
+    }
+
+    const controller = new AbortController();
+    reportRequestRef.current = controller;
+    setReportStatus("loading");
+    try {
+      const response = await generateReport({
+        plan,
+        transcript: finished.turns,
+        jobProfile: analysis.jobProfile,
+        candidateProfile: analysis.candidateProfile,
+      }, controller.signal);
+      if (controller.signal.aborted) return;
+      setReport(response.report);
+      setReportStatus("ready");
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      setReportError(describeApiError(error));
+      setReportStatus(error instanceof ApiClientError && error.code === "INVALID_INPUT" && error.field === "transcript"
+        ? "unavailable" : "error");
+    } finally {
+      if (reportRequestRef.current === controller) reportRequestRef.current = null;
+    }
+  };
+
   const analyze = async () => {
     requestRef.current?.abort();
+    reportRequestRef.current?.abort();
     const controller = new AbortController();
     requestRef.current = controller;
     setSubmitError(null);
@@ -144,6 +181,7 @@ export function MockMateApp() {
   };
 
   const enterRoom = () => {
+    reportRequestRef.current?.abort();
     setUseMockVoice(new URLSearchParams(window.location.search).has("mock"));
     setResult(null);
     setReport(null);
@@ -203,21 +241,22 @@ export function MockMateApp() {
               plan={plan}
               useMock={useMockVoice}
               onFinished={(r) => {
-                const sampleQuotes = [
-                  ...mockReport.categoryFeedback.flatMap((category) => category.quotes),
-                  ...mockReport.strengths.flatMap((item) => item.quotes),
-                  ...mockReport.improvements.flatMap((item) => item.quotes),
-                ];
-                const hasSampleEvidence = sampleQuotes.every((quote) =>
-                  r.turns.some((turn) => turn.id === quote.turnId && turn.text.includes(quote.quote)),
-                );
                 setReport(null);
-                setReportError(
-                  useMockVoice && !hasSampleEvidence
-                    ? "The sample report needs the full scripted interview. Let all turns appear before ending, then try again."
-                    : null,
-                );
-                setReportStatus(!useMockVoice ? "unavailable" : hasSampleEvidence ? "loading" : "error");
+                if (useMockVoice) {
+                  const sampleQuotes = [
+                    ...mockReport.categoryFeedback.flatMap((category) => category.quotes),
+                    ...mockReport.strengths.flatMap((item) => item.quotes),
+                    ...mockReport.improvements.flatMap((item) => item.quotes),
+                  ];
+                  const hasSampleEvidence = sampleQuotes.every((quote) =>
+                    r.turns.some((turn) => turn.id === quote.turnId && turn.text.includes(quote.quote)),
+                  );
+                  setReportError(hasSampleEvidence
+                    ? null : "The sample report needs the full scripted interview. Let all turns appear before ending, then try again.");
+                  setReportStatus(hasSampleEvidence ? "loading" : "error");
+                } else {
+                  void runReport(r);
+                }
                 setResult(r);
                 go("feedback");
               }}
@@ -230,8 +269,15 @@ export function MockMateApp() {
               reportStatus={reportStatus}
               reportError={reportError}
               isSample={useMockVoice}
+              onRetryReport={() => {
+                if (useMockVoice) enterRoom();
+                else void runReport(result);
+              }}
               onPracticeAgain={enterRoom}
-              onNewRole={() => go("prepare")}
+              onNewRole={() => {
+                reportRequestRef.current?.abort();
+                go("prepare");
+              }}
             />
           )}
         </section>
