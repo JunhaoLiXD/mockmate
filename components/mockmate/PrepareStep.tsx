@@ -63,12 +63,18 @@ export function PrepareStep({
   onChange,
   onSubmit,
   busy,
+  busyLabel = "Analyzing…",
+  busyHint,
   submitError,
 }: {
   values: IntakeValues;
   onChange: (values: IntakeValues) => void;
   onSubmit: () => void;
   busy: boolean;
+  /** Button text while busy, e.g. the current step of the analysis. */
+  busyLabel?: string;
+  /** One line under the button explaining what is happening while busy. */
+  busyHint?: string;
   submitError: string | null;
 }) {
   const [errors, setErrors] = useState<Errors>({});
@@ -230,7 +236,7 @@ export function PrepareStep({
 
           <div className="form-actions">
             <button type="submit" className="button button-primary" disabled={busy}>
-              {busy ? "Analyzing…" : "Build my practice plan"} <span aria-hidden="true">→</span>
+              {busy ? busyLabel : "Build my practice plan"} <span aria-hidden="true">→</span>
             </button>
             <button
               type="button"
@@ -243,6 +249,9 @@ export function PrepareStep({
               Try sample details
             </button>
           </div>
+          <p className="field-hint" aria-live="polite" style={{ margin: "8px 0 0" }}>
+            {busy ? busyHint : ""}
+          </p>
         </form>
 
         <aside className="aside-card">
