@@ -6,16 +6,17 @@
  *
  * Analysis and planning call POST /api/analyze, then POST /api/plan. With ?mock=1 the sample
  * analysis and plan are used instead, so the UI can be worked on without paid API calls.
- * TODO(M4): replace the transcript-only review with POST /api/report.
+ * TODO(M4): connect the report view to POST /api/report.
  */
 
 import { useEffect, useRef, useState } from "react";
-import type { AnalyzeResponse, InterviewPlan } from "@/types";
+import type { AnalyzeResponse, InterviewPlan, InterviewReport } from "@/types";
 import { SESSION_LIMITS } from "@/types";
 import { analyzeProfile, createPlan, describeApiError } from "@/lib/api/client";
 import { mockAnalyzeResponse, mockDelay } from "@/mocks/api";
 import { mockPlan } from "@/mocks/plan";
-import { FeedbackStep } from "./FeedbackStep";
+import { mockReport } from "@/mocks/report";
+import { FeedbackStep, type ReportStatus } from "./FeedbackStep";
 import { LiveRoom, type RoomResult } from "./LiveRoom";
 import { PlanStep } from "./PlanStep";
 import { EMPTY_INTAKE, PrepareStep, type IntakeValues } from "./PrepareStep";
@@ -36,16 +37,37 @@ export function MockMateApp() {
   const [analysis, setAnalysis] = useState<AnalyzeResponse | null>(null);
   const [plan, setPlan] = useState<InterviewPlan | null>(null);
   const [result, setResult] = useState<RoomResult | null>(null);
+  const [report, setReport] = useState<InterviewReport | null>(null);
+  const [reportStatus, setReportStatus] = useState<ReportStatus>("loading");
+  const [reportError, setReportError] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "analyzing" | "planning">("idle");
   const [isSample, setIsSample] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const requestRef = useRef<AbortController | null>(null);
   const busy = phase !== "idle";
+  const [useMockVoice, setUseMockVoice] = useState(false);
+  const [roomKey, setRoomKey] = useState(0);
 
   // Cancel an in-flight analysis if the page goes away.
   useEffect(() => () => requestRef.current?.abort(), []);
-  const [useMockVoice, setUseMockVoice] = useState(false);
-  const [roomKey, setRoomKey] = useState(0);
+
+  useEffect(() => {
+    if (!result || !useMockVoice || reportStatus !== "loading") return;
+    let active = true;
+    mockDelay(mockReport, 700).then(
+      (sampleReport) => {
+        if (!active) return;
+        setReport(sampleReport);
+        setReportStatus("ready");
+      },
+      () => {
+        if (!active) return;
+        setReportError("We could not load the sample report. Your transcript is still available below.");
+        setReportStatus("error");
+      },
+    );
+    return () => { active = false; };
+  }, [result, useMockVoice, reportStatus]);
 
   const reached: Record<Step, boolean> = {
     prepare: true,
@@ -108,6 +130,7 @@ export function MockMateApp() {
       setAnalysis(nextAnalysis);
       setPlan(nextPlan);
       setResult(null);
+      setReport(null);
       go("plan");
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -122,6 +145,9 @@ export function MockMateApp() {
 
   const enterRoom = () => {
     setUseMockVoice(new URLSearchParams(window.location.search).has("mock"));
+    setResult(null);
+    setReport(null);
+    setReportError(null);
     setRoomKey((k) => k + 1);
     go("practice");
   };
@@ -177,13 +203,38 @@ export function MockMateApp() {
               plan={plan}
               useMock={useMockVoice}
               onFinished={(r) => {
+                const sampleQuotes = [
+                  ...mockReport.categoryFeedback.flatMap((category) => category.quotes),
+                  ...mockReport.strengths.flatMap((item) => item.quotes),
+                  ...mockReport.improvements.flatMap((item) => item.quotes),
+                ];
+                const hasSampleEvidence = sampleQuotes.every((quote) =>
+                  r.turns.some((turn) => turn.id === quote.turnId && turn.text.includes(quote.quote)),
+                );
+                setReport(null);
+                setReportError(
+                  !useMockVoice
+                    ? "Evidence-based evaluation is not connected yet. You can still review your transcript below."
+                    : hasSampleEvidence
+                      ? null
+                      : "The sample report needs the full scripted interview. Let all turns appear before ending, then try again.",
+                );
+                setReportStatus(useMockVoice && hasSampleEvidence ? "loading" : "error");
                 setResult(r);
                 go("feedback");
               }}
             />
           )}
           {step === "feedback" && result && (
-            <FeedbackStep result={result} onPracticeAgain={enterRoom} onNewRole={() => go("prepare")} />
+            <FeedbackStep
+              result={result}
+              report={report}
+              reportStatus={reportStatus}
+              reportError={reportError}
+              isSample={useMockVoice}
+              onPracticeAgain={enterRoom}
+              onNewRole={() => go("prepare")}
+            />
           )}
         </section>
         <HowItWorks />

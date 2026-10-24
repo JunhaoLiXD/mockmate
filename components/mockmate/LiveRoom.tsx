@@ -68,6 +68,9 @@ function LiveRoomView({
   const modeLabel = INTERVIEW_MODES.find((m) => m.value === plan.mode)?.label ?? plan.mode;
   const styleLabel = COMPANY_STYLES.find((s) => s.value === plan.companyStyle)?.label ?? plan.companyStyle;
   const progress = maxDurationSeconds > 0 ? Math.min(100, (elapsedSeconds / maxDurationSeconds) * 100) : 0;
+  const statusText = isMock && state === "requesting-mic" ? "Starting sample…"
+    : isMock && state === "listening" ? "Playing a scripted answer" : STATUS[state].text;
+  const statusPill = isMock && state === "requesting-mic" ? "STARTING" : STATUS[state].pill;
 
   const transcriptEnd = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -84,7 +87,7 @@ function LiveRoomView({
         <div>
           <span className="section-kicker">03 / INTERVIEW ROOM</span>
           <h2 id="practice-title">Your interview.</h2>
-          <p>Answer out loud. You can interrupt, ask for a repeat, or end at any time.</p>
+          <p>{isMock ? "Watch a scripted interview and end it after all turns appear to see the sample report." : "Answer out loud. You can interrupt, ask for a repeat, or end at any time."}</p>
         </div>
         <span className="heading-decoration" aria-hidden="true">
           ◌
@@ -115,11 +118,11 @@ function LiveRoomView({
             </div>
             <div>
               <strong>MockMate interviewer{isMock && " (mock)"}</strong>
-              <small aria-live="polite">{STATUS[state].text}</small>
+              <small aria-live="polite">{statusText}</small>
             </div>
             <span className={`room-live${live ? " is-live" : ""}${isMock ? " is-mock" : ""}`}>
               {live && <span></span>}
-              {isMock ? `MOCK · ${STATUS[state].pill}` : STATUS[state].pill}
+              {isMock ? `MOCK · ${statusPill}` : STATUS[state].pill}
             </span>
           </div>
 
@@ -156,8 +159,8 @@ function LiveRoomView({
               <div className="stage-start">
                 <strong>{isMock ? "Mock interview (scripted, no microphone)" : "Ready for your interview?"}</strong>
                 <p>
-                  {plan.questions.length} planned questions · up to {Math.round(maxDurationSeconds / 60)} minutes. Your
-                  browser will ask for microphone access.
+                  {plan.questions.length} planned questions · up to {Math.round(maxDurationSeconds / 60)} minutes.
+                  {isMock ? " No microphone is needed for this sample." : " Your browser will ask for microphone access."}
                 </p>
                 <button type="button" className="button button-primary" onClick={() => void session.start()}>
                   Start interview <span aria-hidden="true">→</span>
