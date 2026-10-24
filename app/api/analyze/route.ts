@@ -121,12 +121,21 @@ export async function POST(request: Request): Promise<Response> {
   if (selectedRepoUrl) {
     try {
       repository = await fetchRepository(selectedRepoUrl, env.githubToken);
-      if (resumeRepoUrl) warnings.push("Used a public GitHub repository linked in your resume.");
+      // Name the repository so the user can check it is the right project.
+      if (resumeRepoUrl) {
+        warnings.push(
+          `Used the GitHub repository linked in your resume: ${repository.analysis.repoUrl.replace("https://", "")}. To use a different project, add its URL in the form.`,
+        );
+      }
       warnings.push(...repository.warnings);
     } catch (error) {
       if (!(error instanceof GitHubError)) throw error;
       // Fall back to resume + job description only (brief section 5.1, step 5).
-      warnings.push(`${error.message} Questions will be based on your resume and the job description only.`);
+      const reason =
+        resumeRepoUrl && error.code === "REPO_NOT_FOUND"
+          ? `The GitHub link in your resume (${resumeRepoUrl.replace("https://", "")}) could not be read; it may be private or misspelled.`
+          : error.message;
+      warnings.push(`${reason} Questions will be based on your resume and the job description only.`);
     }
   }
 

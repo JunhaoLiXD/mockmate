@@ -1,6 +1,10 @@
-import { GITHUB_REPO_URL_PATTERN } from "../../types/limits";
+import { GITHUB_REPO_URL_PATTERN } from "@/types";
 
-/** Finds the first explicit public repository link in extracted resume text. */
+/**
+ * Finds the first explicit repository link (github.com/<owner>/<repo>) in resume text.
+ * Profile-only links (github.com/<owner>) are ignored: there is no project to pick.
+ * The result is validated against GITHUB_REPO_URL_PATTERN, like a URL typed in the form.
+ */
 export function findResumeRepositoryUrl(resumeText: string): string | null {
   const links = /(?:^|[^\w@./-])(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9-]+)\/([A-Za-z0-9._-]+)/gi;
   for (const match of resumeText.matchAll(links)) {
