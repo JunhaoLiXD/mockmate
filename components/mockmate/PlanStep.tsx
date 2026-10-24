@@ -1,5 +1,5 @@
 import type { AnalyzeResponse, InterviewPlan } from "@/types";
-import { INTERVIEW_MODES } from "@/types";
+import { COMPANY_STYLE_DISCLAIMER, COMPANY_STYLES, INTERVIEW_MODES } from "@/types";
 
 export function PlanStep({
   analysis,
@@ -16,6 +16,7 @@ export function PlanStep({
 }) {
   const repo = analysis.repository;
   const modeLabel = INTERVIEW_MODES.find((m) => m.value === plan.mode)?.label ?? plan.mode;
+  const styleLabel = COMPANY_STYLES.find((s) => s.value === plan.companyStyle)?.label ?? plan.companyStyle;
 
   return (
     <section className="stage" aria-labelledby="plan-title">
@@ -34,8 +35,8 @@ export function PlanStep({
         <div className="notice">
           <span>✳</span>
           <p>
-            <strong>Sample analysis.</strong> Live repository analysis is being connected. This plan uses the demo
-            repository and a sample technical plan, whatever you entered.
+            <strong>Sample mode.</strong> This plan uses the demo repository and a sample technical plan, whatever you
+            entered. Remove <code>?mock=1</code> from the address to analyze your own materials.
           </p>
         </div>
       )}
@@ -53,8 +54,9 @@ export function PlanStep({
               <span className="mini-label">YOUR SESSION</span>
               <h3>{analysis.jobProfile.roleTitle}</h3>
               <p>
-                {modeLabel} · {plan.durationMinutes} minutes
+                {styleLabel} · {modeLabel} · {plan.durationMinutes} minutes
               </p>
+              <p className="company-angle">{COMPANY_STYLE_DISCLAIMER}</p>
             </div>
             <div className="duration">
               <strong>{plan.durationMinutes}</strong>
