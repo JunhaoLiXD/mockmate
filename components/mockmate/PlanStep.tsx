@@ -24,7 +24,7 @@ export function PlanStep({
         <div>
           <span className="section-kicker">02 / FIND YOUR ANGLE</span>
           <h2 id="plan-title">Your practice plan.</h2>
-          <p>Questions grounded in your role, your resume, and the code we inspected.</p>
+          <p>A brief look at the session ahead. The interview questions stay private until you begin.</p>
         </div>
         <span className="heading-decoration" aria-hidden="true">
           ↗
@@ -59,35 +59,22 @@ export function PlanStep({
               <p className="company-angle">{COMPANY_STYLE_DISCLAIMER}</p>
             </div>
             <div className="duration">
-              <strong>{plan.questions.length}</strong>
-              <span>QUESTIONS</span>
+              <strong>{plan.durationMinutes}</strong>
+              <span>MINUTES</span>
             </div>
           </div>
 
-          {plan.questions.map((q, i) => {
-            const paths = q.sourceRefs.flatMap((ref) => (ref.kind === "repository" ? [ref.evidence] : []));
-            return (
-              <article key={q.id} className="question-card">
-                <div className="question-top">
-                  <span className="question-number">QUESTION 0{i + 1}</span>
-                  <span className="question-tag">{q.targetedSkill}</span>
-                </div>
-                <h3>{q.prompt}</h3>
-                <p>{q.rationale}</p>
-                {paths.length > 0 && (
-                  <div className="path-preview">
-                    <span>Based on inspected code</span>
-                    {paths.map((ev) => (
-                      <code key={`${ev.path}-${ev.lineRange?.start ?? 0}`}>
-                        {ev.path}
-                        {ev.lineRange ? `:${ev.lineRange.start}-${ev.lineRange.end}` : ""}
-                      </code>
-                    ))}
-                  </div>
-                )}
-              </article>
-            );
-          })}
+          <div className="plan-teaser" aria-label="Preparation directions">
+            <span className="mini-label">A FEW DIRECTIONS</span>
+            <h3>Come ready to talk through your work.</h3>
+            <p>The interviewer will choose questions based on your materials and your answers. You can prepare in broad strokes:</p>
+            <ul>
+              <li>Recall a project you can explain clearly from start to finish.</li>
+              <li>Think about decisions you made and what you learned.</li>
+              <li>Be ready to clarify your thinking when asked to go deeper.</li>
+            </ul>
+            <p className="plan-teaser-note">Specific questions and follow-ups are revealed during the interview.</p>
+          </div>
 
           <div className="stage-actions">
             <button type="button" className="button button-primary" onClick={onStart}>
@@ -100,43 +87,34 @@ export function PlanStep({
         </div>
 
         <aside className="inspection-card">
-          <span className="mini-label">INSPECTION SCOPE</span>
-          <h3>What we inspected</h3>
-          <p>Every code-based question links back to a real file at a pinned commit.</p>
+          <span className="mini-label">SESSION INPUTS</span>
+          <h3>What shaped this session</h3>
+          <p>Your materials help the interviewer choose a direction. The report may cite evidence after the session.</p>
           <div className="inspection-row">
             <span className="inspection-glyph">⌘</span>
             <div>
               <strong>Repository</strong>
               <small>
-                {repo
-                  ? `${repo.owner}/${repo.name} @ ${repo.commitSha.slice(0, 7)} · ${repo.inspectedFiles.length} files read, ${repo.skippedFileCount} skipped`
-                  : "No repository analyzed"}
+                {repo ? `${repo.inspectedFiles.length} files inspected` : "No repository analyzed"}
               </small>
             </div>
           </div>
-          {repo && (
-            <div className="path-preview">
-              {repo.inspectedFiles.map((f) => (
-                <code key={f.path}>{f.path}</code>
-              ))}
-            </div>
-          )}
           <div className="inspection-row">
             <span className="inspection-glyph">⌁</span>
             <div>
               <strong>Job description</strong>
-              <small>{analysis.jobProfile.prioritySkills.join(" · ")}</small>
+              <small>Role context included</small>
             </div>
           </div>
           <div className="inspection-row">
             <span className="inspection-glyph">▤</span>
             <div>
               <strong>Resume</strong>
-              <small>{analysis.candidateProfile.projects.map((p) => p.name).join(" · ") || "No projects found"}</small>
+              <small>Experience context included</small>
             </div>
           </div>
           {analysis.candidateProfile.limitations.length > 0 && (
-            <div className="inspection-foot">Not found: {analysis.candidateProfile.limitations.join(" ")}</div>
+            <div className="inspection-foot">Some details may be missing from the materials provided.</div>
           )}
         </aside>
       </div>
