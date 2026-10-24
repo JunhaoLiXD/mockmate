@@ -60,7 +60,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   const daily = checkRateLimit("voice:global", RATE_LIMITS.globalVoiceSessionsPerDay, DAY_MS);
   if (!daily.allowed) {
-    releaseRateLimit(ipKey);
+    releaseRateLimit(ipKey, perIp.slotId);
     return apiError(429, "RATE_LIMITED", "The demo has reached today's interview limit. Please try again tomorrow.", {
       retryAfterSeconds: daily.retryAfterSeconds,
     });
@@ -95,15 +95,16 @@ export async function POST(request: Request): Promise<Response> {
       signal: AbortSignal.timeout(15_000),
     });
   } catch (error) {
-    releaseRateLimit(ipKey);
-    releaseRateLimit("voice:global");
+    // No voice session was created, so nothing was billed.
+    releaseRateLimit(ipKey, perIp.slotId);
+    releaseRateLimit("voice:global", daily.slotId);
     console.error("[api/session] upstream request failed:", error instanceof Error ? error.name : "unknown");
     return apiError(502, "UPSTREAM_ERROR", "Couldn't reach the voice service. Please try again.");
   }
 
   if (!upstream.ok) {
-    releaseRateLimit(ipKey);
-    releaseRateLimit("voice:global");
+    releaseRateLimit(ipKey, perIp.slotId);
+    releaseRateLimit("voice:global", daily.slotId);
     // Log status and OpenAI's error message only; never the request body or headers.
     const detail = await upstream.text().catch(() => "");
     console.error("[api/session] OpenAI returned", upstream.status, detail.slice(0, 500));

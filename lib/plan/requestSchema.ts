@@ -11,7 +11,7 @@ const short = z.string().trim().min(1).max(200);
 const medium = z.string().trim().min(1).max(600);
 const SHA = /^[0-9a-f]{40}$/;
 
-const evidenceSchema = z.object({
+export const evidenceSchema = z.object({
   repoUrl: z.string().regex(/^https:\/\/github\.com\/[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/),
   commitSha: z.string().regex(SHA),
   path: z.string().trim().min(1).max(300),
@@ -21,34 +21,38 @@ const evidenceSchema = z.object({
   confidence: z.enum(["high", "medium", "low"]),
 });
 
-const modeValues = INTERVIEW_MODES.map((m) => m.value) as [PlanRequest["mode"], ...PlanRequest["mode"][]];
-const styleValues = COMPANY_STYLES.map((c) => c.value) as [PlanRequest["companyStyle"], ...PlanRequest["companyStyle"][]];
+export const modeValues = INTERVIEW_MODES.map((m) => m.value) as [PlanRequest["mode"], ...PlanRequest["mode"][]];
+export const styleValues = COMPANY_STYLES.map((c) => c.value) as [PlanRequest["companyStyle"], ...PlanRequest["companyStyle"][]];
+
+export const jobProfileSchema = z.object({
+  companyStyle: z.enum(styleValues),
+  roleTitle: short,
+  companyName: short.optional(),
+  requirements: z.array(z.object({ skill: short, importance: z.enum(["required", "preferred"]), source: medium })).max(20),
+  prioritySkills: z.array(short).max(10),
+});
+
+export const candidateProfileSchema = z.object({
+  skills: z.array(short).max(30),
+  projects: z
+    .array(
+      z.object({
+        name: short,
+        summary: medium,
+        claims: z.array(medium).max(10),
+        repositoryEvidence: z.array(evidenceSchema).max(15),
+      }),
+    )
+    .max(6),
+  limitations: z.array(medium).max(10),
+});
 
 export const planRequestSchema = z.object({
   mode: z.enum(modeValues),
   companyStyle: z.enum(styleValues),
   durationMinutes: z.number().int().min(1).max(60),
-  jobProfile: z.object({
-    companyStyle: z.enum(styleValues),
-    roleTitle: short,
-    companyName: short.optional(),
-    requirements: z.array(z.object({ skill: short, importance: z.enum(["required", "preferred"]), source: medium })).max(20),
-    prioritySkills: z.array(short).max(10),
-  }),
-  candidateProfile: z.object({
-    skills: z.array(short).max(30),
-    projects: z
-      .array(
-        z.object({
-          name: short,
-          summary: medium,
-          claims: z.array(medium).max(10),
-          repositoryEvidence: z.array(evidenceSchema).max(15),
-        }),
-      )
-      .max(6),
-    limitations: z.array(medium).max(10),
-  }),
+  jobProfile: jobProfileSchema,
+  candidateProfile: candidateProfileSchema,
   repository: z
     .object({
       repoUrl: z.string(),
