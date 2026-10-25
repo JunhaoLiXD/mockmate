@@ -38,6 +38,10 @@ interface Connection {
 
 const KICKOFF_FALLBACK_MS = 3000;
 
+/** Sent once, right before the first response, so the interview opens with the persona's greeting. */
+const KICKOFF_NOTE =
+  "Start of the interview from the app: say only your greeting from the interview flow now, exactly as written there apart from the filled-in details. It ends with the request for a short self-introduction. Do not ask any planned question in this turn; wait for the candidate's introduction.";
+
 /**
  * Time cues (M3). The model has no clock, so the app tells it when to wrap up, using system
  * messages added mid-conversation (conversation.item.create, role "system"; see
@@ -53,7 +57,16 @@ function wrapUpNote(maxSeconds: number): string {
     : "Time check from the app: about one minute remains. Do not start a new planned question. Let the candidate finish, ask at most one short follow-up if it is essential, then close.";
 }
 const CLOSE_NOTE =
-  "Time check from the app: time is up. As soon as the candidate finishes their current sentence, thank them in one sentence and end the interview. Do not ask another question.";
+  "Time check from the app: time is up. As soon as the candidate finishes their current answer, say your full closing line from the interview flow: that it's time, a short thank-you, and that the feedback report will be ready in a moment. Do not ask another question and do not give feedback.";
+
+/**
+ * Before asking for the closing line, wait until nobody has spoken for this long, so a question
+ * the interviewer just asked still gets an answer. If the candidate starts answering, the
+ * closing line follows their answer instead.
+ */
+const CLOSE_QUIET_MS = 6000;
+/** Extra seconds past the limit for a closing line, or a last answer, that is still in progress. */
+const CLOSING_OVERRUN_SECONDS = 15;
 
 function cueLeadSeconds(maxSeconds: number): { wrapUp: number; close: number } {
   const wrapUp = maxSeconds >= LONG_SESSION_SECONDS ? 120 : 60;
@@ -113,7 +126,10 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     kickoff?: ReturnType<typeof setTimeout>;
     hangup?: ReturnType<typeof setTimeout>;
     silence?: ReturnType<typeof setTimeout>;
+    closeWait?: ReturnType<typeof setTimeout>;
   }>({});
+  /** When the last speech (either side) ended, in ms since epoch. Used to time the closing line. */
+  const lastSpeechEndedAt = useRef(0);
   /** Silence nudges sent since the candidate last spoke, and whether the mic is muted. */
   const silence = useRef({ nudges: 0, muted: false });
   const active = useRef(false);
@@ -135,6 +151,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     clearTimeout(timers.current.kickoff);
     clearTimeout(timers.current.hangup);
     clearTimeout(timers.current.silence);
+    clearTimeout(timers.current.closeWait);
     timers.current = {};
     const conn = connection.current;
     connection.current = null;
@@ -170,7 +187,14 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     if (kickedOff.current || !dc || dc.readyState !== "open") return;
     kickedOff.current = true;
     clearTimeout(timers.current.kickoff);
-    // Ask the interviewer to greet the candidate and ask the first planned question.
+    // Ask for the greeting only. Without this note the model sometimes improvises an opener, or
+    // stacks the first planned question onto the self-introduction request.
+    dc.send(
+      JSON.stringify({
+        type: "conversation.item.create",
+        item: { type: "message", role: "system", content: [{ type: "input_text", text: KICKOFF_NOTE }] },
+      }),
+    );
     dc.send(JSON.stringify({ type: "response.create" }));
   }, []);
 
@@ -208,6 +232,28 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     }, SILENCE_NUDGE_MS);
   }, [clearSilenceTimer, sendSystemNote]);
 
+  /**
+   * Asks for the closing line once nobody has spoken for CLOSE_QUIET_MS. If someone is talking,
+   * nothing is requested: the candidate's answer ends with an automatic response, which the
+   * close note turns into the closing line.
+   */
+  const requestClosingWhenQuiet = useCallback(() => {
+    const tryClose = () => {
+      clearTimeout(timers.current.closeWait);
+      timers.current.closeWait = undefined;
+      if (!active.current || cues.current.closingStarted) return;
+      const { userSpeaking, aiSpeaking, responseActive } = activity.current;
+      if (userSpeaking || aiSpeaking || responseActive) return;
+      const quietFor = Date.now() - lastSpeechEndedAt.current;
+      if (quietFor >= CLOSE_QUIET_MS) {
+        connection.current?.dc.send(JSON.stringify({ type: "response.create" }));
+        return;
+      }
+      timers.current.closeWait = setTimeout(tryClose, CLOSE_QUIET_MS - quietFor);
+    };
+    tryClose();
+  }, []);
+
   /** Called every second with the elapsed time; sends the wrap-up and closing cues once each. */
   const checkTimeCues = useCallback(
     (seconds: number, maxSeconds: number) => {
@@ -221,14 +267,10 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
         cues.current.closeSent = true;
         clearSilenceTimer();
         sendSystemNote(CLOSE_NOTE);
-        // If nobody is talking, ask for the closing line now; otherwise the next turn will be it.
-        const { userSpeaking, aiSpeaking, responseActive } = activity.current;
-        if (!userSpeaking && !aiSpeaking && !responseActive) {
-          connection.current?.dc.send(JSON.stringify({ type: "response.create" }));
-        }
+        requestClosingWhenQuiet();
       }
     },
-    [clearSilenceTimer, sendSystemNote],
+    [clearSilenceTimer, requestClosingWhenQuiet, sendSystemNote],
   );
 
   const handleServerEvent = useCallback(
@@ -263,11 +305,16 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "output_audio_buffer.stopped":
           activity.current.aiSpeaking = false;
+          lastSpeechEndedAt.current = Date.now();
           setState("listening");
           // The closing line has finished playing: end the interview gracefully.
           if (cues.current.closingStarted) {
             clearTimeout(timers.current.hangup);
             timers.current.hangup = setTimeout(() => finish("time-limit"), CLOSE_HANGUP_DELAY_MS);
+          } else if (cues.current.closeSent) {
+            // Time is up but the interviewer was still talking (often asking a question): give the
+            // candidate a moment to answer, then ask for the closing line.
+            requestClosingWhenQuiet();
           } else {
             // The interviewer finished speaking; start waiting for the candidate.
             armSilenceTimer();
@@ -275,10 +322,12 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "output_audio_buffer.cleared":
           activity.current.aiSpeaking = false;
+          lastSpeechEndedAt.current = Date.now();
           setState("listening");
           break;
         case "input_audio_buffer.speech_started":
           activity.current.userSpeaking = true;
+          clearTimeout(timers.current.closeWait);
           clearSilenceTimer();
           silence.current.nudges = 0;
           // The candidate spoke over the closing line; wait for the next response instead.
@@ -288,9 +337,15 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "input_audio_buffer.speech_stopped":
           activity.current.userSpeaking = false;
-          // Usually the interviewer answers within a second and this timer is cleared. It only
-          // fires if the candidate stopped mid-answer and nobody spoke for a while.
-          armSilenceTimer();
+          lastSpeechEndedAt.current = Date.now();
+          if (cues.current.closeSent) {
+            // After time is up, make sure a closing line follows even if no reply starts by itself.
+            requestClosingWhenQuiet();
+          } else {
+            // Usually the interviewer answers within a second and this timer is cleared. It only
+            // fires if the candidate stopped mid-answer and nobody spoke for a while.
+            armSilenceTimer();
+          }
           break;
         case "error":
           // Server errors are usually recoverable (e.g. a rejected client event); keep the call alive.
@@ -298,7 +353,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
       }
     },
-    [armSilenceTimer, clearSilenceTimer, finish, kickoff],
+    [armSilenceTimer, clearSilenceTimer, finish, kickoff, requestClosingWhenQuiet],
   );
 
   const start = useCallback(async () => {
@@ -307,6 +362,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     kickedOff.current = false;
     activity.current = { userSpeaking: false, aiSpeaking: false, responseActive: false };
     cues.current = { wrapUpSent: false, closeSent: false, closingStarted: false };
+    lastSpeechEndedAt.current = Date.now();
     silence.current = { nudges: 0, muted: false };
     transcript.current = EMPTY_TRANSCRIPT;
     setTurns([]);
@@ -388,10 +444,22 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
       let seconds = 0;
       timers.current.tick = setInterval(() => {
         seconds += 1;
-        setElapsedSeconds(seconds);
-        // Hard stop stays as the backstop if the closing line runs late.
-        if (seconds >= session.maxDurationSeconds) finish("time-limit");
-        else checkTimeCues(seconds, session.maxDurationSeconds);
+        const max = session.maxDurationSeconds;
+        setElapsedSeconds(Math.min(seconds, max));
+        if (seconds < max) {
+          checkTimeCues(seconds, max);
+          return;
+        }
+        // At the limit, let a closing line or a last answer that is still in progress finish,
+        // for at most CLOSING_OVERRUN_SECONDS. After that, the hard stop is the backstop.
+        const { userSpeaking, aiSpeaking, responseActive } = activity.current;
+        const stillTalking = userSpeaking || aiSpeaking || responseActive;
+        const closingNotSaidYet = cues.current.closeSent && !cues.current.closingStarted;
+        if ((stillTalking || closingNotSaidYet) && seconds < max + CLOSING_OVERRUN_SECONDS) {
+          if (!cues.current.closeSent) checkTimeCues(seconds, max);
+          return;
+        }
+        finish("time-limit");
       }, 1000);
     } catch {
       finish("error", { code: "CONNECTION_FAILED", message: "We couldn't connect to the interviewer. Check your network and try again.", retryable: true });

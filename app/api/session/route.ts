@@ -75,7 +75,9 @@ export async function POST(request: Request): Promise<Response> {
     audio: {
       input: {
         transcription: { model: env.transcribeModel },
-        turn_detection: { type: "semantic_vad" },
+        // "low" lets candidates pause to think mid-answer without the interviewer jumping in.
+        // https://developers.openai.com/api/docs/guides/realtime-vad#semantic-vad
+        turn_detection: { type: "semantic_vad", eagerness: "low" },
       },
       output: { voice: env.realtimeVoice },
     },
