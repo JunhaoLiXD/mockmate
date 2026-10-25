@@ -126,7 +126,7 @@ Run these for all four paid routes: `/api/session`, `/api/analyze`, `/api/plan` 
 - [ ] Disclaimers are visible: "Practice feedback only — not an employer evaluation or hiring prediction." and "Unofficial company-style practice; not affiliated with or endorsed by the named companies."
 - [ ] The privacy notice says that inputs and interview audio are sent to OpenAI, a third-party AI service, and describes what MockMate stores (nothing on its servers) accurately.
 - [ ] The page works at phone width without horizontal scrolling.
-- [ ] Debug pages (for example `/dev/voice`) are removed or deliberately kept before the final submission.
+- [ ] Debug pages under `/dev` (for example `/dev/voice`) return 404 on the production URL. They stay available locally and on preview deployments (`app/dev/layout.tsx`).
 
 ### B5. Submission (Sunday)
 
@@ -179,7 +179,7 @@ Start from the symptom. Check the OpenAI docs before changing code, change one t
 1. **Microphone** (`lib/voice/useInterviewSession.ts`, `start`). The microphone is requested *before* any server call, so a permission failure produces no `/api/session` request. Check browser site permissions, that the page is HTTPS or localhost, and the OS input device.
 2. **Session route** (`app/api/session/route.ts`). Check the HTTP status and error code in the browser network tab. 503 `AI_DISABLED` / `VOICE_DISABLED`: a switch is off. 500 "not configured": a missing env var (the server log names it, never its value). 429: rate limit. 502: the OpenAI call failed, timed out or was rejected; the server log shows the exception name or OpenAI's status and error text (redact before sharing).
 3. **WebRTC** (`start` in the hook). The `oai-events` data channel must be created before the offer, and the SDP answer must start with `v=0`. Watch `connectionState`; networks that block UDP fail here, so try a phone hotspot.
-4. **Events** (`/dev/voice` lists server event types). Expect `session.created`, then a `response.*` stream after the kickoff `response.create`. An `error` event names the rejected field, usually in the session config.
+4. **Events** (`/dev/voice` lists server event types; it works locally and on preview deployments, not on production). Expect `session.created`, then a `response.*` stream after the kickoff `response.create`. An `error` event names the rejected field, usually in the session config.
 5. **Transcript** (`lib/voice/transcript.ts`). User text needs `conversation.item.input_audio_transcription.*` (requires `TRANSCRIBE_MODEL` on the OpenAI allowlist); interviewer text needs `response.output_audio_transcript.*`. Turns are keyed by `item_id`.
 6. **Audio playback.** The remote track must attach to the audio element; autoplay can be blocked if `start` did not come from a click. Check output device and volume.
 7. **Interruption, mute, end.** Interruption is detected from `input_audio_buffer.speech_started` and `response.done` with status `cancelled`; transcript text is not trimmed to the playback position. Mute disables the outgoing track only. End and unmount must stop all mic tracks and close the peer connection.
