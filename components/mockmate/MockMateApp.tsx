@@ -17,7 +17,7 @@ import { mockReport } from "@/mocks/report";
 import { FeedbackStep, type ReportStatus } from "./FeedbackStep";
 import { LiveRoom, type RoomResult } from "./LiveRoom";
 import { PlanStep } from "./PlanStep";
-import { EMPTY_INTAKE, PrepareStep, type IntakeValues } from "./PrepareStep";
+import { EMPTY_INTAKE, PrepareStep, type IntakeValues, type SampleDetails } from "./PrepareStep";
 import { Hero, HowItWorks, SiteFooter, SiteHeader } from "./SiteChrome";
 
 type Step = "prepare" | "plan" | "practice" | "feedback";
@@ -29,7 +29,7 @@ const STEPS: Array<{ id: Step; label: string }> = [
   { id: "feedback", label: "Review" },
 ];
 
-export function MockMateApp() {
+export function MockMateApp({ sample }: { sample: SampleDetails }) {
   const [step, setStep] = useState<Step>("prepare");
   const [intake, setIntake] = useState<IntakeValues>(EMPTY_INTAKE);
   const [analysis, setAnalysis] = useState<AnalyzeResponse | null>(null);
@@ -226,6 +226,7 @@ export function MockMateApp() {
 
           {step === "prepare" && (
             <PrepareStep
+              sample={sample}
               values={intake}
               onChange={setIntake}
               onSubmit={analyze}

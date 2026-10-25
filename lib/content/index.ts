@@ -59,3 +59,24 @@ export function getCompanyStyleGuide(style: CompanyStyle): string {
     .replace(/\n---\s*$/, "")
     .trim();
 }
+
+/** Demo repository named in docs/demo-script.md. */
+const DEMO_REPO_URL = "https://github.com/JunhaoLiXD/vision-enhance-platform";
+
+export interface DemoSample {
+  jobDescription: string;
+  resumeText: string;
+  repoUrl: string;
+}
+
+/**
+ * Lisa's fictional demo inputs (content/demo/), used by "Try sample details" on the form.
+ * Read with readFileSync, so the home page includes them in its prerendered HTML at build time.
+ */
+export function getDemoSample(): DemoSample {
+  return {
+    jobDescription: read("demo/job-description.txt").trim(),
+    resumeText: read("demo/resume.txt").trim(),
+    repoUrl: DEMO_REPO_URL,
+  };
+}
