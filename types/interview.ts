@@ -4,7 +4,8 @@
 
 export type InterviewMode = "technical" | "behavioral";
 
-export type CompanyStyle = "general-tech" | "amazon-style";
+/** Generic company types. The site never names a real company; see content/company-styles.md. */
+export type CompanyStyle = "tech" | "business" | "entertainment";
 
 export const INTERVIEW_MODES: ReadonlyArray<{ value: InterviewMode; label: string }> = [
   { value: "technical", label: "Technical" },
@@ -12,8 +13,9 @@ export const INTERVIEW_MODES: ReadonlyArray<{ value: InterviewMode; label: strin
 ];
 
 export const COMPANY_STYLES: ReadonlyArray<{ value: CompanyStyle; label: string }> = [
-  { value: "general-tech", label: "General Tech" },
-  { value: "amazon-style", label: "Amazon-style" },
+  { value: "tech", label: "Tech company" },
+  { value: "business", label: "Business company" },
+  { value: "entertainment", label: "Entertainment company" },
 ];
 
 /** Rubric categories for technical interviews (brief section 7). */
@@ -56,4 +58,4 @@ export const PRACTICE_DISCLAIMER =
   "Practice feedback only — not an employer evaluation or hiring prediction.";
 
 export const COMPANY_STYLE_DISCLAIMER =
-  "Unofficial company-style practice; not affiliated with or endorsed by the named companies.";
+  "Practice styles based on public information about each industry; not affiliated with or endorsed by any company.";

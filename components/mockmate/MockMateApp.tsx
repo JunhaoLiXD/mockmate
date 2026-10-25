@@ -140,7 +140,7 @@ export function MockMateApp({ sample }: { sample: SampleDetails }) {
       if (sample) {
         nextAnalysis = await mockDelay(mockAnalyzeResponse, 900);
         setPhase("planning");
-        nextPlan = await mockDelay({ ...mockPlan, durationMinutes: intake.durationMinutes }, 900);
+        nextPlan = await mockDelay({ ...mockPlan, companyStyle: intake.companyStyle, durationMinutes: intake.durationMinutes }, 900);
       } else {
         nextAnalysis = await analyzeProfile(
           {

@@ -3,7 +3,7 @@ import { mockEvidence } from "./profile";
 
 export const mockPlan: InterviewPlan = {
   mode: "technical",
-  companyStyle: "general-tech",
+  companyStyle: "tech",
   roleTitle: "Computer Vision Engineer",
   durationMinutes: 5,
   coverageGoals: ["PyTorch model understanding", "Pipeline architecture", "Inference performance trade-offs"],

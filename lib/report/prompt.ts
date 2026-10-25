@@ -16,7 +16,7 @@ export function buildReportInstructions(request: ValidReportRequest): string {
 
 ${getRubricText(mode)}
 
-Company style: ${styleLabel} (unofficial practice).${emphasis ? `\n${emphasis}` : ""}
+Company type: ${styleLabel} (a generic practice style; never name a real company as its source).${emphasis ? `\n${emphasis}` : ""}
 
 Report rules:
 - Give every dimension one level: strong, medium, weak or insufficient-evidence. Do not give numbers; the app derives them.

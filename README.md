@@ -33,7 +33,7 @@ Technical interviews rarely stop at definitions. Interviewers ask *why* you chos
 
 - Two interview modes: **Technical** and **Behavioral**, with different questions and different scoring dimensions.
 - Two interview lengths: a quick **5-minute** practice (default) or a fuller **15-minute** interview.
-- Company styles: **General Tech** and **Amazon-style** practice. *(Unofficial; not affiliated with or endorsed by the named companies.)*
+- Three company types: **Tech**, **Business** and **Entertainment**, each with its own focus areas, follow-up style and original practice questions. *(Practice styles based on public information about each industry; not affiliated with or endorsed by any company.)*
 - Real-time voice conversation in the browser, with no app to install.
 - A full transcript with clear speaker labels.
 - Feedback by dimension: what you demonstrated, what remains unclear, why it matters for the job, how to explain it better, and a next practice question.
@@ -69,7 +69,7 @@ flowchart LR
 |---|---|---|
 | Analyze | `POST /api/analyze` | Parses the resume (PDF via `unpdf`, or pasted text). Reads the GitHub repository pinned to its latest commit SHA: README, dependency manifests, then core source files, within fixed size limits. Asks `PLANNER_MODEL` for structured job and candidate profiles, where every piece of evidence has a server-issued ID. If the repository cannot be read, analysis continues with the resume and job description and shows a warning. |
 | Plan | `POST /api/plan` | Asks `PLANNER_MODEL` for a short interview plan: 2 questions for a 5-minute session; for 15 minutes, 5 technical or 3 behavioral questions. Each question is linked to job requirements and evidence IDs; the server drops unknown IDs and any question left without a real source. |
-| Interview | `POST /api/session` | The browser sends its WebRTC offer and the plan. The server builds the interviewer instructions from the persona, rubric focus and company style in `content/`, then creates the Realtime call with the server-side key and returns only the answer SDP. Audio flows directly between the browser and OpenAI. The browser sends time cues near the end of the session and hangs up when time runs out. After about 10 seconds of silence it also sends a cue, so the interviewer checks in once and then moves on instead of waiting or repeating the question. |
+| Interview | `POST /api/session` | The browser sends its WebRTC offer and the plan. The server builds the interviewer instructions from the persona, rubric focus and company type in `content/`, then creates the Realtime call with the server-side key and returns only the answer SDP. Audio flows directly between the browser and OpenAI. The browser sends time cues near the end of the session and hangs up when time runs out. After about 10 seconds of silence it also sends a cue, so the interviewer checks in once and then moves on instead of waiting or repeating the question. |
 | Report | `POST /api/report` | Asks `EVALUATOR_MODEL` to choose a rubric level for each dimension, citing transcript turns. The server checks every quote against the candidate's own complete turns and marks any dimension without a verified quote as "insufficient evidence". Scores and rubric wording come from the rubric files, not from the model. |
 
 ### Evidence and accuracy
@@ -104,7 +104,7 @@ flowchart LR
 - **Practice only:** feedback is not an employer evaluation or a hiring prediction.
 - **Limited code reading:** MockMate reads only a limited number of files from public repositories. If something isn't found in the inspected files, that doesn't mean you didn't build it.
 - **Imperfect transcription:** speech-to-text can make mistakes, especially with technical terms or accents, and this can affect feedback.
-- **Company styles are approximations:** they are based on public, official company pages, not on any real company's internal process or question bank.
+- **Company types are approximations:** each one is based on public, official hiring pages from several companies of that kind, not on any real company's internal process or question bank. The site never names those companies.
 - **Session length:** sessions are short (5 or 15 minutes) to control cost.
 - **Supported inputs:** English only. Resumes in PDF or plain text, public GitHub repositories only.
 
@@ -159,7 +159,7 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`. Release checks are 
 | `lib/` | Server logic and the browser voice client (`lib/voice/`) |
 | `types/` | Shared data contracts and limits |
 | `mocks/` | Sample data and a mock voice session for UI work |
-| `content/` | Interviewer personas, rubrics, company styles and demo materials |
+| `content/` | Interviewer personas, rubrics, company types and demo materials |
 | `docs/` | Requirements brief, release checklist and submission drafts |
 
 Contributor and agent rules are in [`AGENTS.md`](AGENTS.md).

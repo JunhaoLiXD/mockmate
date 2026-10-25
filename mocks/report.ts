@@ -3,7 +3,7 @@ import { mockEvidence } from "./profile";
 
 export const mockReport: InterviewReport = {
   mode: "technical",
-  companyStyle: "general-tech",
+  companyStyle: "tech",
   generatedAt: "2026-10-24T14:06:00.000Z",
   categoryFeedback: [
     {

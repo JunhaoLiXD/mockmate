@@ -22,7 +22,7 @@ As students preparing for technical interviews, we noticed that the hardest ques
 - MockMate reads the repository's README and selected source files, and shows exactly which files it inspected.
 - It prepares a structured interview plan that links each question to the job's requirements and to real details in your code. Before the interview you see the focus areas and the code files behind them; the exact questions stay private until you start.
 - A voice AI interviewer, Albert, runs a real-time spoken interview. He starts by asking you to introduce yourself, then works through the plan. You can interrupt him, ask him to repeat, and he follows up on what you actually said.
-- You can practice in **Technical** or **Behavioral** mode, with **General Tech** or **Amazon-style** focus (unofficial practice styles), in a quick 5-minute session or a fuller 15-minute interview.
+- You can practice in **Technical** or **Behavioral** mode, for a **Tech**, **Business** or **Entertainment** company type, in a quick 5-minute session or a fuller 15-minute interview.
 - After the interview, a separate AI produces an evidence-based report. Every comment quotes your words from the transcript and, for project facts, cites the repository file. Where there isn't enough evidence, the report says so instead of guessing. A provisional 0–100 practice score appears only when enough dimensions are backed by evidence, and it shows what it is based on.
 
 ## How we built it
@@ -34,7 +34,7 @@ As students preparing for technical interviews, we noticed that the hardest ques
 - **Code evidence:** the GitHub REST API reads a limited set of files from public repositories, pinned to a specific commit, and every piece of evidence records the repository, commit, and file path.
 - **Verified quotes:** the server gives every piece of evidence an ID and checks every quote in the report against the candidate's own transcript turns. A dimension whose quotes can't be verified is marked "insufficient evidence" instead of being scored.
 - **Resumes:** PDF text is extracted on the server; the file type, size and page count are checked first.
-- **Content:** we wrote the interviewer personas, scoring rubrics, and company-style guides ourselves. Company styles are based on official public company pages.
+- **Content:** we wrote the interviewer personas, scoring rubrics, and company-type guides ourselves, with original practice questions. Each company type is based on official public hiring pages from several companies of that kind; the site never names them.
 - **Abuse and cost protection:** API keys stay on the server, every paid route has input limits and per-IP rate limits, and kill switches can pause AI calls and voice sessions.
 - **AI assistance:** we used AI coding assistants (Claude Code and OpenAI Codex) to help write, review and debug code during the hackathon. We reviewed AI-assisted changes before committing them, and all project code was written during the official coding window.
 
@@ -61,7 +61,7 @@ As students preparing for technical interviews, we noticed that the hardest ques
 
 ## What's next for MockMate AI
 
-- More company styles and a larger question bank with documented sources.
+- More company types and a larger question bank with documented sources.
 - Code snippets in the report, with links to the exact lines on GitHub.
 - A second practice round focused on each candidate's weakest areas.
 - Saved history and account-based data deletion.
@@ -69,7 +69,7 @@ As students preparing for technical interviews, we noticed that the hardest ques
 ## Disclaimers
 
 - `Practice feedback only — not an employer evaluation or hiring prediction.`
-- `Unofficial company-style practice; not affiliated with or endorsed by the named companies.`
+- `Practice styles based on public information about each industry; not affiliated with or endorsed by any company.`
 
 ## Links
 

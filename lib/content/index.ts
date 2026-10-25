@@ -39,9 +39,10 @@ export function getPersona(mode: InterviewMode): string {
 }
 
 /** Top-level section headings in content/company-styles.md, one per style. */
-const STYLE_HEADINGS: Record<CompanyStyle, RegExp> = {
-  "general-tech": /^## \d+\. General Tech\b/,
-  "amazon-style": /^## \d+\. Amazon-style\b/,
+export const STYLE_HEADINGS: Record<CompanyStyle, RegExp> = {
+  tech: /^## \d+\. Tech Company\b/,
+  business: /^## \d+\. Business Company\b/,
+  entertainment: /^## \d+\. Entertainment Company\b/,
 };
 
 /**
