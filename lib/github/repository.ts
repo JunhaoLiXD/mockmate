@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { ApiErrorCode, RepositoryAnalysis, RepositoryScope } from "@/types";
-import { GITHUB_REPO_URL_PATTERN } from "@/types";
+import { GITHUB_REPO_URL_PATTERN, INPUT_LIMITS } from "@/types";
 import { isManifest, isReadme, selectFiles, type TreeEntry } from "./selectFiles";
 
 /**
@@ -180,8 +180,17 @@ export async function fetchRepository(repoUrl: string, token?: string): Promise<
     warnings.push("The repository is very large, so only part of its file list was available. Analysis covers the README and key files found.");
   }
 
-  const { selected, skippedCount } = selectFiles(entries);
-  const results = await Promise.allSettled(selected.map((entry) => readBlob(canonicalOwner, canonicalName, entry, token)));
+  // Read the root README first: paths it mentions help rank the other files. Its read is reused below.
+  const readmeEntry = entries.find(
+    (e) => e.type === "blob" && isReadme(e.path) && (e.size ?? 0) > 0 && (e.size ?? 0) <= INPUT_LIMITS.repoMaxFileBytes,
+  );
+  const readmeRead = readmeEntry ? readBlob(canonicalOwner, canonicalName, readmeEntry, token) : undefined;
+  const readmeText = await readmeRead?.then((file) => file?.content, () => undefined);
+
+  const { selected, skippedCount } = selectFiles(entries, readmeText);
+  const results = await Promise.allSettled(
+    selected.map((entry) => (entry === readmeEntry && readmeRead ? readmeRead : readBlob(canonicalOwner, canonicalName, entry, token))),
+  );
 
   const files: RepositoryFile[] = [];
   let failed = 0;
