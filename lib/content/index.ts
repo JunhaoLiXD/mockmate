@@ -62,12 +62,15 @@ export function getCompanyStyleGuide(style: CompanyStyle): string {
 }
 
 /** Demo repository for the sample details; content/demo/resume.txt features the same project. */
-const DEMO_REPO_URL = "https://github.com/JunhaoLiXD/Biohub_Cell_Tracking";
+const DEMO_REPO_URL = "https://github.com/JunhaoLiXD/mockmate";
+/** The demo JD is for a business company, so the sample preselects that company type. */
+const DEMO_COMPANY_STYLE: CompanyStyle = "business";
 
 export interface DemoSample {
   jobDescription: string;
   resumeText: string;
   repoUrl: string;
+  companyStyle: CompanyStyle;
 }
 
 /**
@@ -79,5 +82,6 @@ export function getDemoSample(): DemoSample {
     jobDescription: read("demo/job-description.txt").trim(),
     resumeText: read("demo/resume.txt").trim(),
     repoUrl: DEMO_REPO_URL,
+    companyStyle: DEMO_COMPANY_STYLE,
   };
 }

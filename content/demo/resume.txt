@@ -1,6 +1,6 @@
 JORDAN LEE
 Gainesville, FL | jordan.lee@example.com | (352) 555-0142
-GitHub: github.com/JunhaoLiXD/Biohub_Cell_Tracking (featured project)
+GitHub: github.com/JunhaoLiXD/mockmate (featured project)
 
 [Demo resume. Fictional candidate created for MockMate AI practice. All personal details are invented.]
 
@@ -13,30 +13,34 @@ Machine Learning, Database Systems, Software Engineering, Linear Algebra,
 Probability and Statistics
 
 TECHNICAL SKILLS
-Languages:      Python, TypeScript, JavaScript, Java, SQL
-CV / ML:        OpenCV, NumPy, PyTorch, TorchVision, scikit-learn, 3D U-Net,
-                Trackastra, ILP-based tracking
-Web / Backend:  FastAPI, Uvicorn, React, Vite, Tailwind CSS, REST APIs
-Tools:          Git, GitHub, Linux, conda, Vercel, Render
+Languages:      TypeScript, JavaScript, Python, Java, SQL
+Web / Backend:  Next.js, React, Node.js, REST APIs, zod, Tailwind CSS
+AI / Real-time: OpenAI Responses API (structured outputs), OpenAI Realtime API,
+                WebRTC, prompt design
+ML:             PyTorch, scikit-learn, NumPy
+Tools:          Git, GitHub, Linux, Vercel
 
 PROJECTS
 
-Biohub Cell Tracking During Development (Kaggle competition)  Sep 2026 - Oct 2026
-3D cell detection and lineage tracking in microscopy | Python, PyTorch, Jupyter, Kaggle
-- Built a pipeline that detects cells in 3D time-lapse microscopy of developing
-  embryos, links them across frames, and reconstructs cell lineages, including
-  cell divisions.
-- Combined pretrained 3D detectors with learned transformer-based association
-  and ILP tracking, plus motion and gap repair and guarded division handling.
-- Trained and compared U-Net detector variants (isotropic training, augmentation)
-  and evaluated changes on a frozen 16-video validation set.
-- Ran more than 70 controlled experiments, each with a recorded parent, a single
-  change, a validation protocol and a decision rule; kept failed branches and
-  error analyses alongside the successful ones.
-- Reached a public leaderboard score of 0.953. Found that post-processing tuned
-  on public notebooks did not transfer to the hidden rerun (about 0.90), and kept
-  the more robust final solution.
-- Computed distances in physical units using the dataset's anisotropic voxel scale.
+MockMate: AI voice mock interviewer (hackathon, team of 3)   Oct 2026
+Full-stack web app | TypeScript, Next.js, React, OpenAI Responses and Realtime APIs, Vercel
+- Built a web app that reads a job description, a resume, and a public GitHub
+  repository, plans a short interview, runs it by voice in the browser, and
+  writes an evidence-based feedback report.
+- Owned the backend, the real-time voice client, and deployment. The server
+  creates each voice call with its own API key, so the browser never receives
+  an OpenAI credential.
+- Read repositories through the GitHub REST API pinned to one commit, choosing
+  a limited set of files within size limits, so every code citation keeps its
+  repository, commit, and file path.
+- Validated every model output with strict JSON schemas and zod, and had the
+  server issue the evidence IDs, so the report can only cite code the app read
+  and quotes that appear in the candidate's own transcript.
+- Handled real-time turn-taking: time cues for wrapping up and closing, check-ins
+  after long silences, and a closing step that waits for the candidate's last
+  answer.
+- Controlled cost and abuse with input limits, per-IP rate limits counted in
+  interview minutes, a daily cap, and kill switches for AI and voice.
 
 Course Project: Handwritten Digit Classifier (Machine Learning course)   Fall 2024
 Python, PyTorch, scikit-learn
