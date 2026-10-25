@@ -2,7 +2,7 @@
 
 > Owner: Lisa. Target length: 3:00 or less (brief section 13).
 > Draft written 2026-10-24 from the planned features. Before recording on Sunday, update every on-screen step to match the real app.
-> Demo inputs: `content/demo/job-description.txt`, `content/demo/resume.txt`, repository `https://github.com/JunhaoLiXD/vision-enhance-platform` (confirm the owner agrees to show it publicly).
+> Demo inputs: `content/demo/job-description.txt`, `content/demo/resume.txt`, repository `https://github.com/JunhaoLiXD/Biohub_Cell_Tracking` (Jerry's project, chosen by Jerry for the demo). "Try sample details" on the form fills in all three.
 > Narration is about 240 words (about 1:45 at a normal speaking pace), which leaves about 1:15 for the live voice clip and on-screen actions.
 
 ---
@@ -23,7 +23,7 @@
 4. Show the plan page: the inspected files and the focus areas, each with the code files behind it. The exact questions stay private until the interview.
 
 **Narration:**
-"Here's Jordan, a new graduate applying for a computer vision role. Jordan adds the job description, a resume, and a public GitHub project. MockMate reads the repository and shows exactly which files it inspected. Every focus area is tied to the job and to real code, like this one from the Zero-DCE low-light enhancement plugin. The exact questions stay private until the interview starts, just like a real one."
+"Here's Jordan, a new graduate applying for a computer vision role. Jordan adds the job description, a resume, and a public GitHub project. MockMate reads the repository and shows exactly which files it inspected. Every focus area is tied to the job and to real code, like this one from Jordan's 3D cell-tracking project. The exact questions stay private until the interview starts, just like a real one."
 
 ## 1:00–2:10 Live voice interview
 

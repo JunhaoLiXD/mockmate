@@ -60,8 +60,8 @@ export function getCompanyStyleGuide(style: CompanyStyle): string {
     .trim();
 }
 
-/** Demo repository named in docs/demo-script.md. */
-const DEMO_REPO_URL = "https://github.com/JunhaoLiXD/vision-enhance-platform";
+/** Demo repository for the sample details; content/demo/resume.txt features the same project. */
+const DEMO_REPO_URL = "https://github.com/JunhaoLiXD/Biohub_Cell_Tracking";
 
 export interface DemoSample {
   jobDescription: string;
