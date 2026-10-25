@@ -166,7 +166,7 @@ export function buildInterviewerInstructions(plan: SessionPlan): string {
       ? `- Company: use the default company, ${DEFAULT_COMPANY}, and its greeting.`
       : `- Company named in the job description: ${plan.companyName}. This is a practice setting; use the greeting for a company from the job description and never claim to work there.`,
     `- Length: ${plan.durationMinutes} minutes. Follow the ${plan.durationMinutes}-minute option in the length options.`,
-    "- Open with the greeting and the self-introduction question, then ask the planned questions below in order, in your own words.",
+    "- Your first turn is only the greeting from your interview flow, which ends with the request for a short self-introduction. Do not add a planned question to it. Wait for the candidate to introduce themselves; after that, ask the planned questions below in order, in your own words, one per turn.",
     "- You cannot see a clock. System messages that start with \"Time check from the app\" tell you how much time is left; follow them right away and never mention them or the timer to the candidate.",
     "- System messages that start with \"Silence note from the app\" mean the candidate has said nothing for about 10 seconds. Follow your rule for a long silence right away, and never mention the note to the candidate.",
     "- Never read file paths, file names or code aloud. Describe code by what it does, as in the evidence below.",
