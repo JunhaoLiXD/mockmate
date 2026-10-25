@@ -81,6 +81,13 @@ function LiveRoomView({
     lastInterviewer?.text ??
     (state === "connecting" ? "Connecting…" : canStart ? "Your interviewer is ready when you are." : "…");
 
+  // Keep the newest words of a long caption in view while the interviewer is speaking.
+  const captionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = captionRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [caption]);
+
   return (
     <section className="stage" aria-labelledby="practice-title">
       <div className="stage-heading">
@@ -145,13 +152,13 @@ function LiveRoomView({
               />
             </div>
             <div className="stage-dialogue">
-              <div className="stage-caption" aria-live="polite">
-                {caption}
-              </div>
               <div className={`waveform${state === "ai-speaking" ? " is-active" : ""}`} aria-hidden="true">
                 {Array.from({ length: 9 }, (_, i) => (
                   <i key={i}></i>
                 ))}
+              </div>
+              <div className="stage-caption" aria-live="polite" ref={captionRef}>
+                {caption}
               </div>
             </div>
 
