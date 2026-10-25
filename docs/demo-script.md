@@ -23,7 +23,7 @@
 4. Show the plan page: the inspected files and the focus areas, each with the code files behind it. The exact questions stay private until the interview.
 
 **Narration:**
-"Here's Jordan, a new graduate applying for an AI engineering role at a retail company. Jordan adds the job description, a resume, and a public GitHub project: in this demo, MockMate's own code. MockMate reads the repository and shows exactly which files it inspected. Every focus area is tied to the job and to real code. The exact questions stay private until the interview starts, just like a real one."
+"Here's Jenna, a new graduate applying for an AI engineering role at a retail company. Jenna adds the job description, a resume, and a public GitHub project: in this demo, MockMate's own code. MockMate reads the repository and shows exactly which files it inspected. Every focus area is tied to the job and to real code. The exact questions stay private until the interview starts, just like a real one."
 
 ## 1:00–2:10 Live voice interview
 
@@ -38,7 +38,7 @@
 - The candidate interrupting Albert, and Albert stopping to listen.
 
 **Narration (after the clip):**
-"Notice he didn't just move to the next question. He followed up on what Jordan actually said."
+"Notice he didn't just move to the next question. He followed up on what Jenna actually said."
 
 ## 2:10–2:40 Evidence-based report
 
