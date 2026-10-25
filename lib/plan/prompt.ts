@@ -21,7 +21,7 @@ export function buildPlanInstructions(mode: InterviewMode, companyStyle: Company
 
 ${MODE_FOCUS[mode]}
 
-Company style guide (unofficial practice; shapes focus areas and follow-ups):
+Company type guide (a generic practice style; shapes focus areas and follow-ups; never name a real company as its source):
 ${getCompanyStyleGuide(companyStyle)}
 
 Plan rules:

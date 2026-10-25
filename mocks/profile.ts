@@ -74,7 +74,7 @@ export const mockRepositoryAnalysis: RepositoryAnalysis = {
 };
 
 export const mockJobProfile: JobProfile = {
-  companyStyle: "general-tech",
+  companyStyle: "tech",
   roleTitle: "Computer Vision Engineer",
   companyName: "Example Vision Labs",
   requirements: [

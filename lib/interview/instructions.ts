@@ -160,7 +160,7 @@ export function buildInterviewerInstructions(plan: SessionPlan): string {
     "",
     "## Session details from the MockMate app",
     "",
-    `- Interview mode: ${plan.mode}. Company style: ${styleLabel} (unofficial practice).`,
+    `- Interview mode: ${plan.mode}. Company type: ${styleLabel} (a generic practice style for this kind of company; never attribute it to a real company or name one as its source).`,
     `- Role title: ${plan.roleTitle}.`,
     usesDefaultCompany
       ? `- Company: use the default company, ${DEFAULT_COMPANY}, and its greeting.`

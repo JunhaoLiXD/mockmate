@@ -124,7 +124,7 @@ Run these for all four paid routes: `/api/session`, `/api/analyze`, `/api/plan` 
   3. Start the interview and get at least one answer-driven follow-up.
   4. End the interview.
   5. See the report with quoted evidence.
-- [ ] Disclaimers are visible: "Practice feedback only — not an employer evaluation or hiring prediction." and "Unofficial company-style practice; not affiliated with or endorsed by the named companies."
+- [ ] Disclaimers are visible: "Practice feedback only — not an employer evaluation or hiring prediction." and "Practice styles based on public information about each industry; not affiliated with or endorsed by any company." No real company name appears anywhere on the site, and the interviewer never names one as the source of a company type.
 - [ ] The privacy notice says that inputs and interview audio are sent to OpenAI, a third-party AI service, and describes what MockMate stores (nothing on its servers) accurately.
 - [ ] The page works at phone width without horizontal scrolling.
 - [ ] Debug pages under `/dev` (for example `/dev/voice`) return 404 on the production URL. They stay available locally and on preview deployments (`app/dev/layout.tsx`).
@@ -163,7 +163,7 @@ Run with a real microphone and headphones, locally first, then on the deployed U
 - [ ] **Leave mid-interview:** navigating away or reloading releases the microphone.
 - [ ] **Time limit:** about 60 seconds before the limit the interviewer starts wrapping up, about 20 seconds before it closes, and the session ends by itself at the plan's limit after the last sentence finishes.
 - [ ] **15-minute interview:** choose 15 minutes on the form. The plan page shows 15 minutes and more focus areas (5 technical or 3 behavioral). The greeting says about 15 minutes; about two minutes before the end the interviewer invites one question from you, then closes. The report still arrives (it can take up to about 2 minutes).
-- [ ] **Modes and styles:** run at least once in Behavioral mode and once with Amazon-style; the questions and tone change accordingly.
+- [ ] **Modes and company types:** run at least once in Behavioral mode and once each with the Business and Entertainment company types; the focus and follow-ups change accordingly (for example, Business asks what the user would notice if a step failed; Entertainment asks what you would measure to tell whether a change helped).
 
 ## D. Voice diagnosis
 

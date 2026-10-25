@@ -19,7 +19,7 @@
 **On screen:**
 1. Paste the demo job description: Computer Vision Engineer at Quillmoor Biosciences.
 2. Upload the demo resume.
-3. Paste the GitHub link. Choose `Technical` and `General Tech`. Click "Build my practice plan".
+3. Paste the GitHub link. Choose `Technical` and `Tech company`. Click "Build my practice plan".
 4. Show the plan page: the inspected files and the focus areas, each with the code files behind it. The exact questions stay private until the interview.
 
 **Narration:**

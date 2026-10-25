@@ -21,7 +21,7 @@ export const EMPTY_INTAKE: IntakeValues = {
   resumeText: "",
   resumeFile: null,
   repoUrl: "",
-  companyStyle: "general-tech",
+  companyStyle: "tech",
   mode: "technical",
   durationMinutes: SESSION_LIMITS.defaultDurationMinutes,
 };
@@ -195,7 +195,7 @@ export function PrepareStep({
 
           <div className="two-fields">
             <fieldset className="field">
-              <legend>Company style</legend>
+              <legend>Company type</legend>
               <div className="choice-list">
                 {COMPANY_STYLES.map((style) => (
                   <label key={style.value} className="choice">
@@ -206,9 +206,7 @@ export function PrepareStep({
                       checked={values.companyStyle === style.value}
                       onChange={() => set("companyStyle", style.value)}
                     />
-                    <span>
-                      {style.label} {style.value === "amazon-style" && <small>unofficial</small>}
-                    </span>
+                    <span>{style.label}</span>
                   </label>
                 ))}
               </div>

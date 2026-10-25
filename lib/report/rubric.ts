@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { CompanyStyle, EvidenceAssessment, InterviewMode, RubricCategory } from "@/types";
 import { CATEGORIES_BY_MODE, RUBRIC_CATEGORY_LABELS } from "@/types";
+import { STYLE_HEADINGS } from "@/lib/content";
 
 /**
  * Reads Lisa's rubrics (content/rubric-*.md) and the company styles' evaluation emphasis
@@ -76,8 +77,7 @@ export function getDimensionRubrics(mode: InterviewMode): Map<RubricCategory, Di
 
 /** The "Evaluation emphasis" subsection of one company style, or "" when absent. */
 export function getEvaluationEmphasis(style: CompanyStyle): string {
-  const heading = style === "amazon-style" ? /^## \d+\. Amazon-style\b/ : /^## \d+\. General Tech\b/;
-  const section = read("company-styles.md").split(/^(?=## )/m).find((s) => heading.test(s));
+  const section = read("company-styles.md").split(/^(?=## )/m).find((s) => STYLE_HEADINGS[style].test(s));
   if (!section) return "";
   const sub = section.split(/^(?=### )/m).find((s) => /^### [\d.]+ Evaluation emphasis\b/.test(s));
   return sub ? sub.replace(/^### [\d.]+ /, "").replace(/\n---\s*$/, "").trim() : "";
