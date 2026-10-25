@@ -15,7 +15,7 @@ Live site: https://mockmate-tan.vercel.app/
 
 Sunday checks need a human reminder; nothing runs automatically.
 
-**Milestone gates.** Items tagged **[M2]** or **[M4]** apply only once that feature uses real data. Until then, mark them `NOT YET`, never `PASS`. Today only `/api/session` is live; analysis and planning use sample data, and the review page shows the transcript only.
+**Milestone gates.** Items tagged **[M2]** or **[M4]** mark which feature they check. Since 2026-10-24, analysis, planning (M2) and the report (M4) all use real data on production, so every tagged item now applies. Results from `?mock=1` or sample data never count as `PASS` for them.
 
 ## Record every run
 
@@ -88,15 +88,16 @@ Run locally on the branch you want to push.
 
 ### B2. Paid routes and abuse protection
 
-Run these for `/api/session` now, and for `/api/analyze`, `/api/plan` **[M2]** and `/api/report` **[M4]** as they ship, using each route's own limits.
+Run these for all four paid routes: `/api/session`, `/api/analyze`, `/api/plan` **[M2]** and `/api/report` **[M4]**, using each route's own limits. `/api/analyze` takes multipart form data; the others take JSON.
 
 **Prerequisite:** both switches are `true` and the server configuration is complete. Otherwise every request returns the switch or configuration error first, and the tests below prove nothing. Confirm with one same-origin malformed-JSON request returning 400.
 
 - [ ] **Switches:** `AI_ENABLED=false` returns 503 `AI_DISABLED`; `VOICE_ENABLED=false` returns 503 `VOICE_DISABLED` on `/api/session`. Test locally or on a preview deployment, then restore.
 - [ ] **Origin:** no `Origin` header returns 403, and a mismatched `Origin` (for example `https://example.com`) returns 403.
-- [ ] **Body:** malformed JSON returns 400; a body over 64 KiB returns 413; an SDP that does not start with `v=0` or exceeds 20,000 characters returns 400; an invalid plan returns 400. None of these calls OpenAI.
+- [ ] **Body (`/api/session`):** malformed JSON returns 400; a body over 64 KiB returns 413; an SDP that does not start with `v=0` or exceeds 20,000 characters returns 400; an invalid plan returns 400. None of these calls OpenAI.
+- [ ] **Body (other routes):** a non-multipart request to `/api/analyze` returns 400; malformed JSON to `/api/plan` or `/api/report` returns 400. None of these calls OpenAI.
 - [ ] **Input limits (brief 5.3):** JD ≤ 10,000 chars, pasted resume ≤ 10,000 chars, PDF ≤ 2 MB and 5 pages **[M2]**; repo ≤ 15 files, 50 KB each, 200 KB total **[M2]**; report ≤ 60 turns **[M4]**.
-- [ ] **Rate limits:** `/api/session` allows 3 sessions per IP per 10 minutes, then returns 429 with `Retry-After`. Test it with requests that pass validation but whose upstream call is expected to fail, or accept 3 real sessions. The global cap (150 per rolling 24 hours) is verified by code review only; do not create 150 paid sessions. Known limit: counters are per server instance (accepted in brief 5.3).
+- [ ] **Rate limits:** `/api/session` allows 3 sessions per IP per 10 minutes, then returns 429 with `Retry-After`. Test it with requests that pass validation but whose upstream call is expected to fail, or accept 3 real sessions. The global cap (150 per rolling 24 hours) is verified by code review only; do not create 150 paid sessions. `/api/analyze` and `/api/plan` share 5 requests per IP per 10 minutes **[M2]**, and `/api/report` allows 5 **[M4]**; verify these by code review rather than paid calls. A slot is refunded only when OpenAI rejects the request, not after a timeout. Known limit: counters are per server instance (accepted in brief 5.3).
 - [ ] **Logs:** server logs may contain missing variable names, exception names and up to 500 characters of OpenAI's error text. Confirm they never contain API keys, request bodies, SDP, resumes, transcripts or audio, and redact anything sensitive before sharing logs.
 
 ### B3. Untrusted input and evidence
@@ -106,8 +107,11 @@ Run these for `/api/session` now, and for `/api/analyze`, `/api/plan` **[M2]** a
 - [ ] **[M2]** Resume uploads are validated on the server: PDF MIME type and file signature, size and page count.
 - [ ] **[M2]** A prompt-injection line in a JD, resume or README ("ignore previous instructions…") does not change interviewer or report behavior.
 - [ ] **[M2]** Every repository citation in the plan has a `repoUrl`, `commitSha` and `path` that exist on GitHub. Spot-check at least two.
+- [ ] **[M2]** With the repository field blank, a resume that contains a `github.com/<owner>/<repo>` link uses that repository, and the plan page names it. A private or misspelled link falls back to the resume and job description with a warning. A resume with no link shows "No public repository was analyzed".
 - [ ] **[M4]** Every report quote cites a transcript turn ID from that session, and the quoted words appear in that turn.
 - [ ] **[M4]** Incomplete turns (`isFinal: false`) are not judged as full answers.
+- [ ] **[M4]** Ending an interview before giving any complete answer (at least 3 words) shows the "answer at least one question" notice (HTTP 422), not a report.
+- [ ] **[M4]** Report text shows no internal citation IDs (`r1`, `e2`, …); repository evidence appears as file paths instead.
 
 ### B4. Live site (human)
 
@@ -143,7 +147,8 @@ Run with a real microphone and headphones, locally first, then on the deployed U
 
 - [ ] **Start:** the browser asks for the microphone (or uses an existing permission), and the status pill shows `LIVE`, not `MOCK`.
 - [ ] **Permission denied:** blocking the microphone shows a clear message; after allowing it again, "Try again" starts the interview.
-- [ ] **First question:** the interviewer greets in one sentence and asks the first planned question.
+- [ ] **Opening:** the interviewer greets briefly and asks for a short self-introduction, then moves to the first planned question. When the job description names a real company, the interviewer never claims to work there.
+- [ ] **No file paths:** the interviewer never reads file paths or file names aloud.
 - [ ] **Follow-up:** after a 20–30 second answer, the next question builds on something you actually said, without praise or hints.
 - [ ] **Interruption:** speaking over the interviewer stops it quickly, and its unfinished turn is marked `interrupted`. Known limit: the turn keeps the text already generated, which can include words you did not hear; a turn that had already finished is not marked.
 - [ ] **Repeat:** "Could you repeat that?" gets a short repeat.
@@ -154,7 +159,8 @@ Run with a real microphone and headphones, locally first, then on the deployed U
 - [ ] **Restart:** "Practice again" starts a new session with an empty transcript beginning at `t-001`.
 - [ ] **Disconnect:** turning the network off mid-interview shows a connection error, and the microphone is released.
 - [ ] **Leave mid-interview:** navigating away or reloading releases the microphone.
-- [ ] **Time limit:** the session ends by itself at the plan's limit (use a short test plan if needed).
+- [ ] **Time limit:** about 60 seconds before the limit the interviewer starts wrapping up, about 20 seconds before it closes, and the session ends by itself at the plan's limit after the last sentence finishes.
+- [ ] **Modes and styles:** run at least once in Behavioral mode and once with Amazon-style; the questions and tone change accordingly.
 
 ## D. Voice diagnosis
 
