@@ -1,10 +1,10 @@
-# Devpost Submission Text (DRAFT v1)
+# Devpost Submission Text (DRAFT v2)
 
-> Owner: Lisa. Draft written 2026-10-24 from the planned features.
+> Owner: Jerry (taken over from Lisa's draft v1). v2 updated 2026-10-24 against the deployed app.
 > Before submitting (Sunday, by 16:00 ET):
-> - Delete or reword anything that was not actually built.
-> - Fill in the `[TODO]` items with real details from Jerry and Yuki.
-> - Confirm the AI-assistance disclosure requirement with the organizers (brief section 8, P0-A).
+> - Fill in the remaining `[TODO]` items: the demo video link and one lesson per teammate.
+> - Make the GitHub repository public before posting its link.
+> - Check the AI-assistance wording against any format the organizers require.
 
 ---
 
@@ -18,10 +18,10 @@ As students preparing for technical interviews, we noticed that the hardest ques
 
 ## What it does
 
-- You paste a job description, upload your resume, and add a public GitHub repository.
+- You paste a job description, upload your resume, and optionally add a public GitHub repository. If you leave it blank, MockMate uses the first repository link in your resume.
 - MockMate reads the repository's README and selected source files, and shows exactly which files it inspected.
 - It prepares a structured interview plan that links each question to the job's requirements and to real details in your code. Before the interview you see the focus areas and the code files behind them; the exact questions stay private until you start.
-- A voice AI interviewer, Albert, runs a real-time spoken interview. You can interrupt him, ask him to repeat, and he follows up on what you actually said.
+- A voice AI interviewer, Albert, runs a real-time spoken interview. He starts by asking you to introduce yourself, then works through the plan. You can interrupt him, ask him to repeat, and he follows up on what you actually said.
 - You can practice in **Technical** or **Behavioral** mode, with **General Tech** or **Amazon-style** focus (unofficial practice styles).
 - After the interview, a separate AI produces an evidence-based report. Every comment quotes your words from the transcript and, for project facts, cites the repository file. Where there isn't enough evidence, the report says so instead of guessing. A provisional 0–100 practice score appears only when enough dimensions are backed by evidence, and it shows what it is based on.
 
@@ -32,21 +32,24 @@ As students preparing for technical interviews, we noticed that the hardest ques
 - **Session timing:** the model has no clock, so the app sends timed system notes that tell the interviewer to wrap up and close before the 5-minute limit.
 - **Analysis and feedback:** OpenAI text models with structured, schema-validated JSON outputs for the candidate profile, interview plan, and report.
 - **Code evidence:** the GitHub REST API reads a limited set of files from public repositories, pinned to a specific commit, and every piece of evidence records the repository, commit, and file path.
+- **Verified quotes:** the server gives every piece of evidence an ID and checks every quote in the report against the candidate's own transcript turns. A dimension whose quotes can't be verified is marked "insufficient evidence" instead of being scored.
+- **Resumes:** PDF text is extracted on the server; the file type, size and page count are checked first.
 - **Content:** we wrote the interviewer personas, scoring rubrics, and company-style guides ourselves. Company styles are based on official public company pages.
-- **AI assistance:** we used AI coding assistants during development. [TODO: adjust wording to the organizers' disclosure requirement.]
-- [TODO: Jerry adds any technical details that changed during the build.]
+- **Abuse and cost protection:** API keys stay on the server, every paid route has input limits and per-IP rate limits, and kill switches can pause AI calls and voice sessions.
+- **AI assistance:** we used AI coding assistants (Claude Code and OpenAI Codex) to help write, review and debug code during the hackathon. We reviewed AI-assisted changes before committing them, and all project code was written during the official coding window.
 
 ## Challenges we ran into
 
-- [TODO: fill in real challenges.] Candidates:
-  - Getting reliable real-time voice: microphone permissions, interruptions, and keeping the transcript in order.
-  - Keeping the AI honest: it may only mention code it actually read.
-  - Fitting repository analysis within time and size limits.
-  - Making the interviewer feel human (follow-ups, tone) without letting it give hints.
+- **Keeping the AI honest.** Models like to sound confident. We made the server issue every evidence ID and verify every quote, so the plan and report can only cite code the app actually read and words the candidate actually said.
+- **An interviewer that sounds human.** Early versions read file paths aloud. We now give the voice model plain-English descriptions of the code instead, and it asks about decisions and trade-offs rather than file names.
+- **Time awareness.** The voice model can't see a clock, so it had no way to pace a 5-minute interview. Timed system notes now tell it when to wrap up and when to close, and the app ends the call after its last sentence.
+- **Real-time voice details.** Interruptions, keeping both sides of the transcript in order, and releasing the microphone on every exit path took several rounds of testing.
+- **Reading real repositories.** Large trees, binary files, UTF-16 text files and GitHub rate limits all needed handling, within strict size limits so analysis stays fast and cheap.
+- **Making the repository optional.** Not every candidate has a public project ready. MockMate now falls back to a link in the resume, or to the resume and job description alone, and tells the user which one it used.
 
 ## Accomplishments that we're proud of
 
-- [TODO: confirm.] A full working loop: job description and code → interview plan → live voice interview → evidence-based report.
+- A full working loop on the live site: job description and code → interview plan → live voice interview → evidence-based report.
 - Feedback that cites evidence, with a practice score shown only when there is enough evidence to support it.
 - An interviewer with a consistent personality who asks real follow-up questions.
 
@@ -70,6 +73,6 @@ As students preparing for technical interviews, we noticed that the hardest ques
 
 ## Links
 
-- Live demo: [TODO]
-- GitHub repository: [TODO]
+- Live demo: https://mockmate-tan.vercel.app/
+- GitHub repository: https://github.com/JunhaoLiXD/mockmate
 - Demo video: [TODO]
