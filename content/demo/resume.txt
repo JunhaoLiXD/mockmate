@@ -1,6 +1,6 @@
 JORDAN LEE
 Gainesville, FL | jordan.lee@example.com | (352) 555-0142
-GitHub: github.com/JunhaoLiXD/vision-enhance-platform (featured project)
+GitHub: github.com/JunhaoLiXD/Biohub_Cell_Tracking (featured project)
 
 [Demo resume. Fictional candidate created for MockMate AI practice. All personal details are invented.]
 
@@ -14,26 +14,29 @@ Probability and Statistics
 
 TECHNICAL SKILLS
 Languages:      Python, TypeScript, JavaScript, Java, SQL
-CV / ML:        OpenCV, NumPy, PyTorch, TorchVision, Pillow, scikit-learn
+CV / ML:        OpenCV, NumPy, PyTorch, TorchVision, scikit-learn, 3D U-Net,
+                Trackastra, ILP-based tracking
 Web / Backend:  FastAPI, Uvicorn, React, Vite, Tailwind CSS, REST APIs
 Tools:          Git, GitHub, Linux, conda, Vercel, Render
 
 PROJECTS
 
-Vision Enhance Platform                                           2025 - 2026
-Full-stack image enhancement web app | Python, FastAPI, PyTorch, OpenCV, React, TypeScript
-- Built a web app where users upload an image, choose a preset or build a
-  custom multi-step pipeline, and download the enhanced result.
-- Implemented five classical enhancement algorithms (gamma correction, CLAHE,
-  multi-scale Retinex, bilateral filtering, unsharp masking) and integrated a
-  pretrained Zero-DCE deep learning model for low-light enhancement.
-- Designed a plugin-based pipeline engine with a shared float32 image format,
-  so each algorithm declares its own parameters and new algorithms can be
-  added without changing the core engine.
-- Built an asynchronous job API in FastAPI with background tasks and status
-  polling, plus job workspaces that store status and manifest files.
-- Loaded model weights once per process to avoid reloading on every request.
-- Deployed the React + TypeScript frontend on Vercel and the backend on Render.
+Biohub Cell Tracking During Development (Kaggle competition)  Sep 2026 - Oct 2026
+3D cell detection and lineage tracking in microscopy | Python, PyTorch, Jupyter, Kaggle
+- Built a pipeline that detects cells in 3D time-lapse microscopy of developing
+  embryos, links them across frames, and reconstructs cell lineages, including
+  cell divisions.
+- Combined pretrained 3D detectors with learned transformer-based association
+  and ILP tracking, plus motion and gap repair and guarded division handling.
+- Trained and compared U-Net detector variants (isotropic training, augmentation)
+  and evaluated changes on a frozen 16-video validation set.
+- Ran more than 70 controlled experiments, each with a recorded parent, a single
+  change, a validation protocol and a decision rule; kept failed branches and
+  error analyses alongside the successful ones.
+- Reached a public leaderboard score of 0.953. Found that post-processing tuned
+  on public notebooks did not transfer to the hidden rerun (about 0.90), and kept
+  the more robust final solution.
+- Computed distances in physical units using the dataset's anisotropic voxel scale.
 
 Course Project: Handwritten Digit Classifier (Machine Learning course)   Fall 2024
 Python, PyTorch, scikit-learn

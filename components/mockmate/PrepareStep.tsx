@@ -31,14 +31,8 @@ const DURATION_HINTS: Record<InterviewDuration, string> = {
   15: "fuller interview",
 };
 
-/** Fictional sample inputs. TODO: replace with Lisa's content/demo files once delivered. */
-const SAMPLE: Pick<IntakeValues, "jobDescription" | "resumeText" | "repoUrl"> = {
-  jobDescription:
-    "Computer Vision Engineer — Build and ship image enhancement models in PyTorch, deploy them behind production APIs, and profile inference latency. Strong grasp of classical image processing required.",
-  resumeText:
-    "Sam Rivera (sam@example.com) — CS student. Built Vision Enhance Platform: a FastAPI + React app with a plugin-based pipeline of classical filters (CLAHE, Retinex) and a Zero-DCE low-light model.",
-  repoUrl: "https://github.com/JunhaoLiXD/vision-enhance-platform",
-};
+/** Fictional demo inputs for "Try sample details", read from content/demo/ on the server. */
+export type SampleDetails = Pick<IntakeValues, "jobDescription" | "resumeText" | "repoUrl">;
 
 type Errors = Partial<Record<"jobDescription" | "resume" | "repoUrl", string>>;
 
@@ -66,6 +60,7 @@ function validate(values: IntakeValues): Errors {
 }
 
 export function PrepareStep({
+  sample,
   values,
   onChange,
   onSubmit,
@@ -74,6 +69,8 @@ export function PrepareStep({
   busyHint,
   submitError,
 }: {
+  /** Filled in by "Try sample details". */
+  sample: SampleDetails;
   values: IntakeValues;
   onChange: (values: IntakeValues) => void;
   onSubmit: () => void;
@@ -269,7 +266,7 @@ export function PrepareStep({
               type="button"
               className="text-button"
               onClick={() => {
-                onChange({ ...values, ...SAMPLE, resumeMode: "paste" });
+                onChange({ ...values, ...sample, resumeMode: "paste" });
                 setErrors({});
               }}
             >
