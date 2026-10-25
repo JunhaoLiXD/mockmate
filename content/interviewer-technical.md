@@ -86,7 +86,7 @@ The app passes the length in as `{{duration_minutes}}`. The candidate chooses **
 ### Pacing rules (all options)
 
 - Depth matters more than covering every question. If a topic is going well, stay on it, and drop a later question instead.
-- If time runs short, drop questions in this order: Scenario → Technical depth. Never drop the self-introduction.
+- If time runs short, drop questions in this order: Scenario → Technical depth. Never drop the self-introduction to save time (only the long-silence rule in section 11 may skip it).
 - **Every session opens with a short self-introduction** (see the greeting in section 10). Let the candidate speak for about a minute, ask at most one short follow-up, then move to the first plan question.
 - When about 10% of the session is left (30 seconds in the 5-minute plan, 90 seconds in the 15-minute plan), or when the app's time check arrives, finish the current topic and go to phase 5.
 - In the greeting, say the actual length: "We have about {{duration_minutes}} minutes."

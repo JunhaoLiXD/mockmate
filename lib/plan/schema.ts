@@ -12,9 +12,10 @@ import { CATEGORIES_BY_MODE } from "@/types";
  * Planned questions per interview length, asked after the self-introduction (which the
  * interviewer asks on its own and is not planned). The 15-minute counts follow the personas'
  * length options: 5 technical questions, or 3 behavioral ones because stories need more follow-ups.
+ * A 5-minute behavioral interview has room for one story after the self-introduction.
  */
 const QUESTION_COUNTS: Record<InterviewDuration, Record<InterviewMode, number>> = {
-  5: { technical: 2, behavioral: 2 },
+  5: { technical: 2, behavioral: 1 },
   15: { technical: 5, behavioral: 3 },
 };
 
@@ -56,7 +57,7 @@ export function planOutputSchema(mode: InterviewMode, questionCount: number) {
           followupHints: z.array(z.string()).min(1).max(3).describe("When and how to follow up, based on likely answers."),
         }),
       )
-      .min(2)
+      .min(Math.min(2, questionCount))
       .max(questionCount),
   });
 }

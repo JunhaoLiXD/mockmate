@@ -68,7 +68,7 @@ flowchart LR
 | Step | Route | What it does |
 |---|---|---|
 | Analyze | `POST /api/analyze` | Parses the resume (PDF via `unpdf`, or pasted text). Reads the GitHub repository pinned to its latest commit SHA: README, dependency manifests, then core source files, within fixed size limits. Asks `PLANNER_MODEL` for structured job and candidate profiles, where every piece of evidence has a server-issued ID. If the repository cannot be read, analysis continues with the resume and job description and shows a warning. |
-| Plan | `POST /api/plan` | Asks `PLANNER_MODEL` for a short interview plan: 2 questions for a 5-minute session; for 15 minutes, 5 technical or 3 behavioral questions. Each question is linked to job requirements and evidence IDs; the server drops unknown IDs and any question left without a real source. |
+| Plan | `POST /api/plan` | Asks `PLANNER_MODEL` for a short interview plan: for 5 minutes, 2 technical or 1 behavioral question; for 15 minutes, 5 technical or 3 behavioral questions. Each question is linked to job requirements and evidence IDs; the server drops unknown IDs and any question left without a real source. |
 | Interview | `POST /api/session` | The browser sends its WebRTC offer and the plan. The server builds the interviewer instructions from the persona, rubric focus and company type in `content/`, then creates the Realtime call with the server-side key and returns only the answer SDP. Audio flows directly between the browser and OpenAI. The browser sends time cues near the end of the session and hangs up when time runs out. After about 10 seconds of silence it also sends a cue, so the interviewer checks in once and then moves on instead of waiting or repeating the question. |
 | Report | `POST /api/report` | Asks `EVALUATOR_MODEL` to choose a rubric level for each dimension, citing transcript turns. The server checks every quote against the candidate's own complete turns and marks any dimension without a verified quote as "insufficient evidence". Scores and rubric wording come from the rubric files, not from the model. |
 
@@ -94,7 +94,7 @@ flowchart LR
 - **No storage, minimal logging.** Requests are processed in memory. Logs never contain keys, resumes, request bodies, transcripts or audio.
 - **Cost limits.**
   - `AI_ENABLED` and `VOICE_ENABLED` kill switches: every paid route returns 503 unless they are set to `true`.
-  - Input limits: job description and resume text up to 10,000 characters each; resume PDF up to 2 MB and 5 pages; up to 15 repository files, 50 KB each, 200 KB in total; reports up to 60 turns.
+  - Input limits: job description and resume text up to 10,000 characters each; resume PDF up to 2 MB and 5 pages; up to 15 repository files, 50 KB each, 200 KB in total; reports up to 150 turns and 30,000 characters.
   - Rate limits per IP in a 10-minute window: 15 minutes of voice interviews (three 5-minute interviews or one 15-minute interview), 5 analyses, 5 plans and 5 reports. Voice is also capped at 750 interview minutes per day across all users.
   - Same-origin checks on every API route.
   - Interviews are 5 or 15 minutes long; the server accepts no other length.
@@ -114,6 +114,11 @@ flowchart LR
 - **Rate limits are best effort.** They are kept in memory per server instance and reset when an instance restarts.
 - **The interview time limit is enforced in the browser.** The server sets up the session but cannot hang up a call that a modified client keeps open.
 - **Resume links:** only repository links written out as text in the resume are detected. A link that exists only as a clickable label in a PDF is not.
+- **Voice turn-taking is best effort.** The app's own prompts (silence check-ins, time cues, the closing line) and the model's automatic replies are not scheduled by one controller. In rare timing cases a check-in can overlap an answer that has just resumed, or a reply can be skipped.
+- **Muting does not pause the interview.** The clock keeps running and the interviewer may continue after a partial answer; muting only stops silence check-ins.
+- **Interviewer transcripts are what was generated, not exactly what was heard.** If you interrupt the interviewer, its turn can contain words that were never played, and a turn that finished generating before you interrupted is not marked as interrupted.
+- **The last answer can be cut off.** At the time limit the app allows up to 15 extra seconds for a final answer and the closing line, then hangs up.
+- **Follow-up depth varies by company type.** Some company types allow more follow-ups than the persona's default, so a 15-minute interview may not reach every planned question.
 
 ## Privacy
 
