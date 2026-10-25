@@ -10,7 +10,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AnalyzeResponse, InterviewPlan, InterviewReport } from "@/types";
-import { SESSION_LIMITS } from "@/types";
 import { ApiClientError, analyzeProfile, createPlan, describeApiError, generateReport } from "@/lib/api/client";
 import { mockAnalyzeResponse, mockDelay } from "@/mocks/api";
 import { mockPlan } from "@/mocks/plan";
@@ -141,7 +140,7 @@ export function MockMateApp() {
       if (sample) {
         nextAnalysis = await mockDelay(mockAnalyzeResponse, 900);
         setPhase("planning");
-        nextPlan = await mockDelay(mockPlan, 900);
+        nextPlan = await mockDelay({ ...mockPlan, durationMinutes: intake.durationMinutes }, 900);
       } else {
         nextAnalysis = await analyzeProfile(
           {
@@ -160,7 +159,7 @@ export function MockMateApp() {
           {
             mode: intake.mode,
             companyStyle: intake.companyStyle,
-            durationMinutes: SESSION_LIMITS.defaultDurationMinutes,
+            durationMinutes: intake.durationMinutes,
             jobProfile: nextAnalysis.jobProfile,
             candidateProfile: nextAnalysis.candidateProfile,
             repository: nextAnalysis.repository,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { InterviewMode, RubricCategory } from "@/types";
+import type { InterviewDuration, InterviewMode, RubricCategory } from "@/types";
 import { CATEGORIES_BY_MODE } from "@/types";
 
 /**
@@ -9,11 +9,17 @@ import { CATEGORIES_BY_MODE } from "@/types";
  */
 
 /**
- * Planned questions that fit the interview length. About 1.5 minutes go to the greeting and
- * self-introduction (asked by the interviewer, not planned), so 5 minutes gives 2 questions.
+ * Planned questions per interview length, asked after the self-introduction (which the
+ * interviewer asks on its own and is not planned). The 15-minute counts follow the personas'
+ * length options: 5 technical questions, or 3 behavioral ones because stories need more follow-ups.
  */
-export function questionCountFor(durationMinutes: number): number {
-  return Math.min(5, Math.max(2, Math.round((durationMinutes - 1.5) * 0.6)));
+const QUESTION_COUNTS: Record<InterviewDuration, Record<InterviewMode, number>> = {
+  5: { technical: 2, behavioral: 2 },
+  15: { technical: 5, behavioral: 3 },
+};
+
+export function questionCountFor(durationMinutes: InterviewDuration, mode: InterviewMode): number {
+  return QUESTION_COUNTS[durationMinutes][mode];
 }
 
 export function planOutputSchema(mode: InterviewMode, questionCount: number) {

@@ -20,11 +20,12 @@ import { checkRateLimit, releaseRateLimit } from "@/lib/server/rateLimit";
  * against GitHub here. A tampered request only changes that user's own report.
  */
 
-export const maxDuration = 60;
+/** 15-minute transcripts take longer to grade; Vercel Hobby allows up to 300 s with fluid compute. */
+export const maxDuration = 120;
 
 const MAX_BODY_BYTES = 256 * 1024;
 const WINDOW_MS = RATE_LIMITS.windowMinutes * 60 * 1000;
-const AI_TIMEOUT_MS = 45_000;
+const AI_TIMEOUT_MS = 100_000;
 
 export async function POST(request: Request): Promise<Response> {
   const env = getServerEnv();

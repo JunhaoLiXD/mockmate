@@ -15,16 +15,30 @@ export const INPUT_LIMITS = {
   reportMaxTurns: 60,
 } as const;
 
+/** Interview lengths a candidate can choose, in minutes. The personas cover exactly these options. */
+export const INTERVIEW_DURATIONS = [5, 15] as const;
+export type InterviewDuration = (typeof INTERVIEW_DURATIONS)[number];
+
+export function isInterviewDuration(value: unknown): value is InterviewDuration {
+  return INTERVIEW_DURATIONS.some((minutes) => minutes === value);
+}
+
 export const SESSION_LIMITS = {
   defaultDurationMinutes: 5,
+  maxDurationMinutes: 15,
 } as const;
 
+/**
+ * Voice limits count interview minutes, not sessions, so a 15-minute interview uses three times
+ * the budget of a 5-minute one. Per IP: 15 minutes per window (three 5-minute interviews or one
+ * 15-minute interview). Globally: 750 minutes per day, the same cost ceiling as 150 five-minute sessions.
+ */
 export const RATE_LIMITS = {
   windowMinutes: 10,
-  voiceSessionsPerWindow: 3,
+  voiceMinutesPerWindow: 15,
   analyzeOrPlanPerWindow: 5,
   reportsPerWindow: 5,
-  globalVoiceSessionsPerDay: 150,
+  globalVoiceMinutesPerDay: 750,
 } as const;
 
 /** Accepted GitHub repository URL shape: https://github.com/<owner>/<repo> */

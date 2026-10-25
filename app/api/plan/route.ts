@@ -1,5 +1,5 @@
 import type { PlanResponse } from "@/types";
-import { RATE_LIMITS, SESSION_LIMITS } from "@/types";
+import { INTERVIEW_DURATIONS, isInterviewDuration, RATE_LIMITS } from "@/types";
 import { AiError, generateStructured } from "@/lib/ai/structured";
 import { buildInterviewPlan } from "@/lib/plan/buildPlan";
 import { buildPlanInput, buildPlanInstructions, collectSources } from "@/lib/plan/prompt";
@@ -44,10 +44,12 @@ export async function POST(request: Request): Promise<Response> {
       ...(typeof field === "string" ? { field } : {}),
     });
   }
-  const planRequest = {
-    ...parsed.data,
-    durationMinutes: Math.min(parsed.data.durationMinutes, SESSION_LIMITS.defaultDurationMinutes),
-  };
+  if (!isInterviewDuration(parsed.data.durationMinutes)) {
+    return apiError(400, "INVALID_INPUT", `Choose an interview length of ${INTERVIEW_DURATIONS.join(" or ")} minutes.`, {
+      field: "durationMinutes",
+    });
+  }
+  const planRequest = { ...parsed.data, durationMinutes: parsed.data.durationMinutes };
 
   const ip = getClientIp(request);
   const ipKey = `plan:${ip}`;
@@ -58,7 +60,7 @@ export async function POST(request: Request): Promise<Response> {
     });
   }
 
-  const questionCount = questionCountFor(planRequest.durationMinutes);
+  const questionCount = questionCountFor(planRequest.durationMinutes, planRequest.mode);
   const sources = collectSources(planRequest);
 
   try {

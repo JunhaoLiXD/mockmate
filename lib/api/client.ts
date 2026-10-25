@@ -34,8 +34,11 @@ function isErrorBody(value: unknown): value is ApiErrorBody {
   return typeof value === "object" && value !== null && "error" in value && typeof (value as ApiErrorBody).error?.message === "string";
 }
 
-async function request<T>(url: string, init: RequestInit, signal?: AbortSignal): Promise<T> {
-  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+/** The report route may run up to 120 s for a 15-minute interview; wait a little longer than that. */
+const REPORT_TIMEOUT_MS = 130_000;
+
+async function request<T>(url: string, init: RequestInit, signal?: AbortSignal, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
+  const timeout = AbortSignal.timeout(timeoutMs);
   // AbortSignal.any is missing in older Safari; fall back to the caller's signal there.
   const combined = signal ? (typeof AbortSignal.any === "function" ? AbortSignal.any([signal, timeout]) : signal) : timeout;
 
@@ -76,12 +79,13 @@ export function createPlan(body: PlanRequest, signal?: AbortSignal): Promise<Pla
   );
 }
 
-/** Generates the feedback report after a real interview. Takes about 20 seconds. */
+/** Generates the feedback report after a real interview. Takes about 30 seconds for 5 minutes, longer for 15. */
 export function generateReport(body: ReportRequest, signal?: AbortSignal): Promise<ReportResponse> {
   return request<ReportResponse>(
     API_ROUTES.report,
     { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) },
     signal,
+    REPORT_TIMEOUT_MS,
   );
 }
 

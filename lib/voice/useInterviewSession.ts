@@ -42,16 +42,37 @@ const KICKOFF_FALLBACK_MS = 3000;
  * Time cues (M3). The model has no clock, so the app tells it when to wrap up, using system
  * messages added mid-conversation (conversation.item.create, role "system"; see
  * https://developers.openai.com/api/reference/resources/realtime/client-events).
- * For a 5-minute session: wrap-up note at 4:00, closing note at 4:40, hard stop at 5:00.
+ * 5-minute session: wrap-up note at 4:00, closing note at 4:40, hard stop at 5:00.
+ * 15-minute session: wrap-up note at 13:00 (room for one candidate question), closing note at 14:40.
  */
-const WRAP_UP_NOTE =
-  "Time check from the app: about one minute remains. Do not start a new planned question. Let the candidate finish, ask at most one short follow-up if it is essential, then close.";
+const LONG_SESSION_SECONDS = 10 * 60;
+
+function wrapUpNote(maxSeconds: number): string {
+  return maxSeconds >= LONG_SESSION_SECONDS
+    ? "Time check from the app: about two minutes remain. Do not start a new planned question. Let the candidate finish, invite one question from the candidate as your length option allows, then close."
+    : "Time check from the app: about one minute remains. Do not start a new planned question. Let the candidate finish, ask at most one short follow-up if it is essential, then close.";
+}
 const CLOSE_NOTE =
   "Time check from the app: time is up. As soon as the candidate finishes their current sentence, thank them in one sentence and end the interview. Do not ask another question.";
 
 function cueLeadSeconds(maxSeconds: number): { wrapUp: number; close: number } {
-  return { wrapUp: Math.min(60, Math.floor(maxSeconds * 0.2)), close: Math.min(20, Math.floor(maxSeconds * 0.1)) };
+  const wrapUp = maxSeconds >= LONG_SESSION_SECONDS ? 120 : 60;
+  return { wrapUp: Math.min(wrapUp, Math.floor(maxSeconds * 0.2)), close: Math.min(20, Math.floor(maxSeconds * 0.1)) };
 }
+
+/**
+ * Silence nudges. When nobody has spoken for SILENCE_NUDGE_MS after the interviewer finished
+ * (or after the candidate stopped mid-answer), the app adds a system note and asks for a
+ * response, so the interviewer neither waits forever nor repeats the whole question.
+ * Nudges alternate: check in, then move on (so the next question gets a check-in too).
+ * At most MAX_SILENCE_NUDGES in a row; the count resets when the candidate speaks.
+ */
+const SILENCE_NUDGE_MS = 10_000;
+const MAX_SILENCE_NUDGES = 4;
+const SILENCE_NOTES = [
+  "Silence note from the app: the candidate has said nothing for about 10 seconds. Check in once, briefly, as your rule for a long silence says. Do not repeat the whole question.",
+  "Silence note from the app: the candidate is still silent. As your rule for a long silence says, move on now.",
+] as const;
 
 /** Pause after the closing line finishes playing, before hanging up. */
 const CLOSE_HANGUP_DELAY_MS = 800;
@@ -79,7 +100,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
   const [turns, setTurns] = useState<TranscriptTurn[]>([]);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [maxDurationSeconds, setMaxDurationSeconds] = useState(
-    Math.min(plan.durationMinutes, SESSION_LIMITS.defaultDurationMinutes) * 60,
+    Math.min(plan.durationMinutes, SESSION_LIMITS.maxDurationMinutes) * 60,
   );
   const [error, setError] = useState<VoiceSessionError | null>(null);
   const [endReason, setEndReason] = useState<SessionEndReason | null>(null);
@@ -91,7 +112,10 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     tick?: ReturnType<typeof setInterval>;
     kickoff?: ReturnType<typeof setTimeout>;
     hangup?: ReturnType<typeof setTimeout>;
+    silence?: ReturnType<typeof setTimeout>;
   }>({});
+  /** Silence nudges sent since the candidate last spoke, and whether the mic is muted. */
+  const silence = useRef({ nudges: 0, muted: false });
   const active = useRef(false);
   const kickedOff = useRef(false);
   /** Live activity flags, used to decide when the closing line can start. */
@@ -110,6 +134,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     clearInterval(timers.current.tick);
     clearTimeout(timers.current.kickoff);
     clearTimeout(timers.current.hangup);
+    clearTimeout(timers.current.silence);
     timers.current = {};
     const conn = connection.current;
     connection.current = null;
@@ -161,6 +186,28 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     );
   }, []);
 
+  const clearSilenceTimer = useCallback(() => {
+    clearTimeout(timers.current.silence);
+    timers.current.silence = undefined;
+  }, []);
+
+  /** Starts the silence timer. It never runs while muted, while closing, or after the nudge limit. */
+  const armSilenceTimer = useCallback(() => {
+    clearSilenceTimer();
+    if (!active.current || silence.current.muted || cues.current.closeSent) return;
+    if (silence.current.nudges >= MAX_SILENCE_NUDGES) return;
+    timers.current.silence = setTimeout(() => {
+      timers.current.silence = undefined;
+      const { userSpeaking, aiSpeaking, responseActive } = activity.current;
+      if (!active.current || silence.current.muted || cues.current.closeSent) return;
+      if (userSpeaking || aiSpeaking || responseActive) return;
+      const note = SILENCE_NOTES[silence.current.nudges % SILENCE_NOTES.length];
+      silence.current.nudges += 1;
+      sendSystemNote(note);
+      connection.current?.dc.send(JSON.stringify({ type: "response.create" }));
+    }, SILENCE_NUDGE_MS);
+  }, [clearSilenceTimer, sendSystemNote]);
+
   /** Called every second with the elapsed time; sends the wrap-up and closing cues once each. */
   const checkTimeCues = useCallback(
     (seconds: number, maxSeconds: number) => {
@@ -168,10 +215,11 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
       const lead = cueLeadSeconds(maxSeconds);
       if (!cues.current.wrapUpSent && remaining <= lead.wrapUp) {
         cues.current.wrapUpSent = true;
-        sendSystemNote(WRAP_UP_NOTE);
+        sendSystemNote(wrapUpNote(maxSeconds));
       }
       if (!cues.current.closeSent && remaining <= lead.close) {
         cues.current.closeSent = true;
+        clearSilenceTimer();
         sendSystemNote(CLOSE_NOTE);
         // If nobody is talking, ask for the closing line now; otherwise the next turn will be it.
         const { userSpeaking, aiSpeaking, responseActive } = activity.current;
@@ -180,7 +228,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
         }
       }
     },
-    [sendSystemNote],
+    [clearSilenceTimer, sendSystemNote],
   );
 
   const handleServerEvent = useCallback(
@@ -199,6 +247,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "response.created":
           activity.current.responseActive = true;
+          clearSilenceTimer();
           if (cues.current.closeSent) cues.current.closingStarted = true;
           break;
         case "response.done":
@@ -206,6 +255,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "output_audio_buffer.started":
           activity.current.aiSpeaking = true;
+          clearSilenceTimer();
           setState("ai-speaking");
           break;
         case "response.output_audio_transcript.delta":
@@ -218,6 +268,9 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           if (cues.current.closingStarted) {
             clearTimeout(timers.current.hangup);
             timers.current.hangup = setTimeout(() => finish("time-limit"), CLOSE_HANGUP_DELAY_MS);
+          } else {
+            // The interviewer finished speaking; start waiting for the candidate.
+            armSilenceTimer();
           }
           break;
         case "output_audio_buffer.cleared":
@@ -226,6 +279,8 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "input_audio_buffer.speech_started":
           activity.current.userSpeaking = true;
+          clearSilenceTimer();
+          silence.current.nudges = 0;
           // The candidate spoke over the closing line; wait for the next response instead.
           clearTimeout(timers.current.hangup);
           if (cues.current.closingStarted) cues.current.closingStarted = false;
@@ -233,6 +288,9 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "input_audio_buffer.speech_stopped":
           activity.current.userSpeaking = false;
+          // Usually the interviewer answers within a second and this timer is cleared. It only
+          // fires if the candidate stopped mid-answer and nobody spoke for a while.
+          armSilenceTimer();
           break;
         case "error":
           // Server errors are usually recoverable (e.g. a rejected client event); keep the call alive.
@@ -240,7 +298,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
       }
     },
-    [finish, kickoff],
+    [armSilenceTimer, clearSilenceTimer, finish, kickoff],
   );
 
   const start = useCallback(async () => {
@@ -249,6 +307,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     kickedOff.current = false;
     activity.current = { userSpeaking: false, aiSpeaking: false, responseActive: false };
     cues.current = { wrapUpSent: false, closeSent: false, closingStarted: false };
+    silence.current = { nudges: 0, muted: false };
     transcript.current = EMPTY_TRANSCRIPT;
     setTurns([]);
     setElapsedSeconds(0);
@@ -342,12 +401,24 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
   const end = useCallback(() => finish("user-ended"), [finish]);
 
   /** Mutes by disabling the outgoing track; the connection and interviewer audio stay live. */
-  const setMicMuted = useCallback((muted: boolean) => {
-    connection.current?.mic.getAudioTracks().forEach((track) => {
-      track.enabled = !muted;
-    });
-    setMicMutedState(muted);
-  }, []);
+  const setMicMuted = useCallback(
+    (muted: boolean) => {
+      connection.current?.mic.getAudioTracks().forEach((track) => {
+        track.enabled = !muted;
+      });
+      // A muted candidate is not silent on purpose: no nudges until the mic is back on.
+      silence.current.muted = muted;
+      if (muted) {
+        clearSilenceTimer();
+      } else {
+        silence.current.nudges = 0;
+        const { userSpeaking, aiSpeaking, responseActive } = activity.current;
+        if (!userSpeaking && !aiSpeaking && !responseActive) armSilenceTimer();
+      }
+      setMicMutedState(muted);
+    },
+    [armSilenceTimer, clearSilenceTimer],
+  );
 
   // Release the microphone and connection if the component unmounts mid-interview.
   useEffect(() => teardown, [teardown]);
