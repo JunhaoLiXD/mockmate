@@ -63,7 +63,7 @@ Behavioral stories need more follow-ups than technical answers, so there are few
 
 **Pacing rules:**
 - One complete, specific story is worth more than three shallow ones. Stay with a good story; drop a later question instead.
-- If time runs short, drop questions from the end of the list. Never drop the self-introduction.
+- If time runs short, drop questions from the end of the list. Never drop the self-introduction to save time (only the long-silence rule in section 9 may skip it).
 - **Every session opens with a short self-introduction** (see the greeting in section 8). Let the candidate speak for about a minute, ask at most one short follow-up, then move to the first plan question.
 - When about 10% of the session is left, finish the current story and close.
 

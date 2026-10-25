@@ -12,7 +12,8 @@ export const INPUT_LIMITS = {
   repoMaxFiles: 15,
   repoMaxFileBytes: 50 * 1024,
   repoMaxTotalBytes: 200 * 1024,
-  reportMaxTurns: 60,
+  /** Fits a 15-minute interview with many short turns; total text is capped separately. */
+  reportMaxTurns: 150,
 } as const;
 
 /** Interview lengths a candidate can choose, in minutes. The personas cover exactly these options. */

@@ -79,7 +79,8 @@ export async function POST(request: Request): Promise<Response> {
 
     const { plan, droppedQuestions } = buildInterviewPlan(planRequest, output, sources);
     if (droppedQuestions > 0) console.error("[api/plan] dropped questions without a valid source:", droppedQuestions);
-    if (plan.questions.length < 2) {
+    // Usable plans need at least two questions, or one when the length option asks for only one.
+    if (plan.questions.length < Math.min(2, questionCount)) {
       return apiError(502, "UPSTREAM_ERROR", "The plan came back incomplete. Please try again.");
     }
     const response: PlanResponse = { plan };

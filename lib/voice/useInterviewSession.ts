@@ -40,7 +40,7 @@ const KICKOFF_FALLBACK_MS = 3000;
 
 /** Sent once, right before the first response, so the interview opens with the persona's greeting. */
 const KICKOFF_NOTE =
-  "Start of the interview from the app: say only your greeting from the interview flow now, exactly as written there apart from the filled-in details. It ends with the request for a short self-introduction. Do not ask any planned question in this turn; wait for the candidate's introduction.";
+  "Start of the interview from the app (this note applies to your first turn only): say your greeting from the interview flow now, exactly as written there apart from the filled-in details. It ends with the request for a short self-introduction. Do not ask any planned question in this turn; wait for the candidate's introduction. Never repeat the greeting later.";
 
 /**
  * Time cues (M3). The model has no clock, so the app tells it when to wrap up, using system
@@ -78,14 +78,51 @@ function cueLeadSeconds(maxSeconds: number): { wrapUp: number; close: number } {
  * (or after the candidate stopped mid-answer), the app adds a system note and asks for a
  * response, so the interviewer neither waits forever nor repeats the whole question.
  * Nudges alternate: check in, then move on (so the next question gets a check-in too).
- * At most MAX_SILENCE_NUDGES in a row; the count resets when the candidate speaks.
+ * After MAX_SILENCE_NUDGES in a row the app closes the interview; the count resets when the
+ * candidate speaks.
  */
 const SILENCE_NUDGE_MS = 10_000;
 const MAX_SILENCE_NUDGES = 4;
-const SILENCE_NOTES = [
-  "Silence note from the app: the candidate has said nothing for about 10 seconds. Check in once, briefly, as your rule for a long silence says. Do not repeat the whole question.",
-  "Silence note from the app: the candidate is still silent. As your rule for a long silence says, move on now.",
-] as const;
+
+/** Where the interview is, for choosing what a silence note asks for. */
+type InterviewStage = "opening" | "questions" | "wrap-up";
+
+/**
+ * Each note spells out the exact next step, because a general reminder ("follow your silence
+ * rule") let the model repeat the greeting or rephrase the same question instead of moving on.
+ * Wrap-up notes never start a new question, so they cannot contradict the wrap-up time cue.
+ */
+function silenceNote(nudgeIndex: number, stage: InterviewStage): string {
+  const checkIn = nudgeIndex % 2 === 0;
+  if (stage === "opening") {
+    return checkIn
+      ? 'Silence note from the app: the candidate has not started their self-introduction yet. Do not repeat your greeting. Say one short, kind sentence that suggests how to start, for example: "Take your time. A sentence or two about what you\'re studying and one project you\'ve worked on is plenty."'
+      : 'Silence note from the app: the candidate is still silent. Skip the self-introduction. Say "Let\'s go straight to the first question." and ask the first planned question now, in one or two sentences.';
+  }
+  if (checkIn) {
+    return 'Silence note from the app: the candidate has said nothing for about 10 seconds. Say one short sentence that offers help, for example: "Take your time. Would you like me to repeat that, or put it another way?" Do not repeat or rephrase the question yourself yet.';
+  }
+  return stage === "wrap-up"
+    ? "Silence note from the app: the candidate is still silent and time is almost up. Do not ask another question. Say your full closing line from the interview flow now."
+    : 'Silence note from the app: the candidate is still silent. Do not ask the current question again in any form. Say "Let\'s try a different one." and ask the next planned question now. If no planned question is left, say your full closing line from the interview flow instead.';
+}
+
+/** Sent when the candidate has stayed silent through every nudge. */
+const LONG_SILENCE_CLOSE_NOTE =
+  "Silence note from the app: the candidate has been silent for a long time. Do not ask another question. Say your full closing line from the interview flow now.";
+
+/**
+ * Recognizes the persona's closing line ("That's our time. ... Your feedback report will be ready
+ * in a moment."), so the app hangs up even when the interviewer closes before the close cue.
+ */
+const CLOSING_LINE = /\bthat'?s (all of )?our time\b|\b(feedback )?report (will be|is) ready\b/i;
+
+/** A speech segment at least this long counts as the candidate having spoken. */
+const MIN_SPOKEN_MS = 1500;
+/** How long to wait after response.done before deciding that a response produced no audio. */
+const NO_AUDIO_CHECK_MS = 1500;
+/** Retries for a closing line that failed or produced no audio. */
+const MAX_CLOSING_RETRIES = 2;
 
 /** Pause after the closing line finishes playing, before hanging up. */
 const CLOSE_HANGUP_DELAY_MS = 800;
@@ -127,11 +164,19 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     hangup?: ReturnType<typeof setTimeout>;
     silence?: ReturnType<typeof setTimeout>;
     closeWait?: ReturnType<typeof setTimeout>;
+    noAudio?: ReturnType<typeof setTimeout>;
   }>({});
   /** When the last speech (either side) ended, in ms since epoch. Used to time the closing line. */
   const lastSpeechEndedAt = useRef(0);
-  /** Silence nudges sent since the candidate last spoke, and whether the mic is muted. */
-  const silence = useRef({ nudges: 0, muted: false });
+  /**
+   * Silence nudges sent since the candidate last spoke, whether the mic is muted, and whether the
+   * opening is over (the candidate spoke, or a nudge skipped the self-introduction).
+   */
+  const silence = useRef({ nudges: 0, muted: false, openingDone: false });
+  /** When the current candidate speech segment started, in ms since epoch (0 when not speaking). */
+  const speechStartedAt = useRef(0);
+  /** Response bookkeeping: a counter per response, and the last response that produced audio. */
+  const responses = useRef({ seq: 0, withAudio: 0, closingRetries: 0 });
   const active = useRef(false);
   const kickedOff = useRef(false);
   /** Live activity flags, used to decide when the closing line can start. */
@@ -152,6 +197,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     clearTimeout(timers.current.hangup);
     clearTimeout(timers.current.silence);
     clearTimeout(timers.current.closeWait);
+    clearTimeout(timers.current.noAudio);
     timers.current = {};
     const conn = connection.current;
     connection.current = null;
@@ -215,20 +261,38 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     timers.current.silence = undefined;
   }, []);
 
-  /** Starts the silence timer. It never runs while muted, while closing, or after the nudge limit. */
+  /**
+   * Starts the silence timer. It never runs while muted or once closing has begun. After the last
+   * nudge, the next silence closes the interview instead of leaving the call silent.
+   */
   const armSilenceTimer = useCallback(() => {
     clearSilenceTimer();
     if (!active.current || silence.current.muted || cues.current.closeSent) return;
-    if (silence.current.nudges >= MAX_SILENCE_NUDGES) return;
     timers.current.silence = setTimeout(() => {
       timers.current.silence = undefined;
       const { userSpeaking, aiSpeaking, responseActive } = activity.current;
       if (!active.current || silence.current.muted || cues.current.closeSent) return;
       if (userSpeaking || aiSpeaking || responseActive) return;
-      const note = SILENCE_NOTES[silence.current.nudges % SILENCE_NOTES.length];
+      const dc = connection.current?.dc;
+      if (!dc || dc.readyState !== "open") return;
+
+      if (silence.current.nudges >= MAX_SILENCE_NUDGES) {
+        // Treat the long silence like the end of time: the next response is the closing line.
+        cues.current.closeSent = true;
+        sendSystemNote(LONG_SILENCE_CLOSE_NOTE);
+        dc.send(JSON.stringify({ type: "response.create" }));
+        return;
+      }
+
+      const spoke = transcript.current.turns.some((t) => t.speaker === "user" && t.text.trim() !== "");
+      if (spoke) silence.current.openingDone = true;
+      const stage: InterviewStage = cues.current.wrapUpSent ? "wrap-up" : silence.current.openingDone ? "questions" : "opening";
+      const nudgeIndex = silence.current.nudges;
+      // Moving on from the opening skips the self-introduction for good.
+      if (stage === "opening" && nudgeIndex % 2 === 1) silence.current.openingDone = true;
       silence.current.nudges += 1;
-      sendSystemNote(note);
-      connection.current?.dc.send(JSON.stringify({ type: "response.create" }));
+      sendSystemNote(silenceNote(nudgeIndex, stage));
+      dc.send(JSON.stringify({ type: "response.create" }));
     }, SILENCE_NUDGE_MS);
   }, [clearSilenceTimer, sendSystemNote]);
 
@@ -289,19 +353,56 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "response.created":
           activity.current.responseActive = true;
+          responses.current.seq += 1;
           clearSilenceTimer();
           if (cues.current.closeSent) cues.current.closingStarted = true;
           break;
-        case "response.done":
+        case "response.done": {
           activity.current.responseActive = false;
+          // A cancelled response means the candidate interrupted; speech events handle that.
+          if (event.response?.status === "cancelled") break;
+          // A response that failed or produced no audio would otherwise leave nothing scheduled.
+          const seq = responses.current.seq;
+          clearTimeout(timers.current.noAudio);
+          timers.current.noAudio = setTimeout(() => {
+            timers.current.noAudio = undefined;
+            if (!active.current || responses.current.withAudio === seq || responses.current.seq !== seq) return;
+            const { userSpeaking, aiSpeaking, responseActive } = activity.current;
+            if (userSpeaking || aiSpeaking || responseActive) return;
+            if (cues.current.closeSent) {
+              cues.current.closingStarted = false;
+              if (responses.current.closingRetries < MAX_CLOSING_RETRIES) {
+                responses.current.closingRetries += 1;
+                requestClosingWhenQuiet();
+              }
+            } else {
+              armSilenceTimer();
+            }
+          }, NO_AUDIO_CHECK_MS);
           break;
+        }
         case "output_audio_buffer.started":
           activity.current.aiSpeaking = true;
+          responses.current.withAudio = responses.current.seq;
           clearSilenceTimer();
           setState("ai-speaking");
           break;
         case "response.output_audio_transcript.delta":
           setState("ai-speaking");
+          break;
+        case "response.output_audio_transcript.done":
+          // The interviewer said its closing line, possibly before the close cue (after the wrap-up
+          // cue, or when no planned question was left): stop nudges and hang up once it has played.
+          if (CLOSING_LINE.test(event.transcript ?? "") && !activity.current.userSpeaking) {
+            cues.current.closeSent = true;
+            cues.current.closingStarted = true;
+            clearSilenceTimer();
+            clearTimeout(timers.current.closeWait);
+            if (!activity.current.aiSpeaking) {
+              clearTimeout(timers.current.hangup);
+              timers.current.hangup = setTimeout(() => finish("time-limit"), CLOSE_HANGUP_DELAY_MS);
+            }
+          }
           break;
         case "output_audio_buffer.stopped":
           activity.current.aiSpeaking = false;
@@ -327,6 +428,7 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
           break;
         case "input_audio_buffer.speech_started":
           activity.current.userSpeaking = true;
+          speechStartedAt.current = Date.now();
           clearTimeout(timers.current.closeWait);
           clearSilenceTimer();
           silence.current.nudges = 0;
@@ -338,6 +440,11 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
         case "input_audio_buffer.speech_stopped":
           activity.current.userSpeaking = false;
           lastSpeechEndedAt.current = Date.now();
+          // A real stretch of speech ends the opening even if its transcript comes back empty.
+          if (speechStartedAt.current && Date.now() - speechStartedAt.current >= MIN_SPOKEN_MS) {
+            silence.current.openingDone = true;
+          }
+          speechStartedAt.current = 0;
           if (cues.current.closeSent) {
             // After time is up, make sure a closing line follows even if no reply starts by itself.
             requestClosingWhenQuiet();
@@ -363,7 +470,9 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
     activity.current = { userSpeaking: false, aiSpeaking: false, responseActive: false };
     cues.current = { wrapUpSent: false, closeSent: false, closingStarted: false };
     lastSpeechEndedAt.current = Date.now();
-    silence.current = { nudges: 0, muted: false };
+    speechStartedAt.current = 0;
+    responses.current = { seq: 0, withAudio: 0, closingRetries: 0 };
+    silence.current = { nudges: 0, muted: false, openingDone: false };
     transcript.current = EMPTY_TRANSCRIPT;
     setTurns([]);
     setElapsedSeconds(0);
@@ -441,9 +550,11 @@ export function useInterviewSession(plan: InterviewPlan, options: InterviewSessi
 
       setMaxDurationSeconds(session.maxDurationSeconds);
       setState("listening");
-      let seconds = 0;
+      // Elapsed time comes from the clock, not from counting ticks, so a delayed or throttled timer
+      // (busy tab, sleeping device) cannot push the cues and the hard stop later.
+      const startedAt = Date.now();
       timers.current.tick = setInterval(() => {
-        seconds += 1;
+        const seconds = Math.floor((Date.now() - startedAt) / 1000);
         const max = session.maxDurationSeconds;
         setElapsedSeconds(Math.min(seconds, max));
         if (seconds < max) {
