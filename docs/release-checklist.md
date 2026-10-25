@@ -97,7 +97,8 @@ Run these for all four paid routes: `/api/session`, `/api/analyze`, `/api/plan` 
 - [ ] **Body (`/api/session`):** malformed JSON returns 400; a body over 64 KiB returns 413; an SDP that does not start with `v=0` or exceeds 20,000 characters returns 400; an invalid plan returns 400. None of these calls OpenAI.
 - [ ] **Body (other routes):** a non-multipart request to `/api/analyze` returns 400; malformed JSON to `/api/plan` or `/api/report` returns 400. None of these calls OpenAI.
 - [ ] **Input limits (brief 5.3):** JD ≤ 10,000 chars, pasted resume ≤ 10,000 chars, PDF ≤ 2 MB and 5 pages **[M2]**; repo ≤ 15 files, 50 KB each, 200 KB total **[M2]**; report ≤ 60 turns **[M4]**.
-- [ ] **Rate limits:** `/api/session` allows 3 sessions per IP per 10 minutes, then returns 429 with `Retry-After`. Test it with requests that pass validation but whose upstream call is expected to fail, or accept 3 real sessions. The global cap (150 per rolling 24 hours) is verified by code review only; do not create 150 paid sessions. `/api/analyze` and `/api/plan` share 5 requests per IP per 10 minutes **[M2]**, and `/api/report` allows 5 **[M4]**; verify these by code review rather than paid calls. A slot is refunded only when OpenAI rejects the request, not after a timeout. Known limit: counters are per server instance (accepted in brief 5.3).
+- [ ] **Rate limits:** `/api/session` counts interview minutes: 15 minutes per IP per 10 minutes (three 5-minute sessions or one 15-minute session), then returns 429 with `Retry-After`. Test it with requests that pass validation but whose upstream call is expected to fail, or accept real sessions. The global cap (750 interview minutes per rolling 24 hours) is verified by code review only. `/api/analyze` and `/api/plan` each allow 5 requests per IP per 10 minutes **[M2]**, and `/api/report` allows 5 **[M4]**; verify these by code review rather than paid calls.
+- [ ] **Interview length:** a plan or session request with a length other than 5 or 15 minutes returns 400 without calling OpenAI. A slot is refunded only when OpenAI rejects the request, not after a timeout. Known limit: counters are per server instance (accepted in brief 5.3).
 - [ ] **Logs:** server logs may contain missing variable names, exception names and up to 500 characters of OpenAI's error text. Confirm they never contain API keys, request bodies, SDP, resumes, transcripts or audio, and redact anything sensitive before sharing logs.
 
 ### B3. Untrusted input and evidence
@@ -152,7 +153,8 @@ Run with a real microphone and headphones, locally first, then on the deployed U
 - [ ] **Follow-up:** after a 20–30 second answer, the next question builds on something you actually said, without praise or hints.
 - [ ] **Interruption:** speaking over the interviewer stops it quickly, and its unfinished turn is marked `interrupted`. Known limit: the turn keeps the text already generated, which can include words you did not hear; a turn that had already finished is not marked.
 - [ ] **Repeat:** "Could you repeat that?" gets a short repeat.
-- [ ] **Long silence:** after about 20 seconds of silence the session stays connected and the interviewer waits or offers to repeat.
+- [ ] **Long silence:** stay silent after the greeting. About 10 seconds later the interviewer checks in once (for the self-introduction, it suggests a short way to start) without repeating the whole question. After another 10 seconds of silence it moves on to the first planned question. The session stays connected.
+- [ ] **Silence while muted:** with the mic muted, the interviewer does not check in, however long you wait.
 - [ ] **Mute:** with the mic off, the interviewer does not react to speech; turning it back on resumes.
 - [ ] **Transcript:** turn IDs go `t-001`, `t-002`, … in order with correct speakers; nothing is duplicated or reordered.
 - [ ] **End:** "End interview" stops audio and the browser's microphone indicator turns off.
@@ -160,6 +162,7 @@ Run with a real microphone and headphones, locally first, then on the deployed U
 - [ ] **Disconnect:** turning the network off mid-interview shows a connection error, and the microphone is released.
 - [ ] **Leave mid-interview:** navigating away or reloading releases the microphone.
 - [ ] **Time limit:** about 60 seconds before the limit the interviewer starts wrapping up, about 20 seconds before it closes, and the session ends by itself at the plan's limit after the last sentence finishes.
+- [ ] **15-minute interview:** choose 15 minutes on the form. The plan page shows 15 minutes and more focus areas (5 technical or 3 behavioral). The greeting says about 15 minutes; about two minutes before the end the interviewer invites one question from you, then closes. The report still arrives (it can take up to about 2 minutes).
 - [ ] **Modes and styles:** run at least once in Behavioral mode and once with Amazon-style; the questions and tone change accordingly.
 
 ## D. Voice diagnosis

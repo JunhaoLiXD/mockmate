@@ -32,6 +32,7 @@ Technical interviews rarely stop at definitions. Interviewers ask *why* you chos
 ## Features
 
 - Two interview modes: **Technical** and **Behavioral**, with different questions and different scoring dimensions.
+- Two interview lengths: a quick **5-minute** practice (default) or a fuller **15-minute** interview.
 - Company styles: **General Tech** and **Amazon-style** practice. *(Unofficial; not affiliated with or endorsed by the named companies.)*
 - Real-time voice conversation in the browser, with no app to install.
 - A full transcript with clear speaker labels.
@@ -67,8 +68,8 @@ flowchart LR
 | Step | Route | What it does |
 |---|---|---|
 | Analyze | `POST /api/analyze` | Parses the resume (PDF via `unpdf`, or pasted text). Reads the GitHub repository pinned to its latest commit SHA: README, dependency manifests, then core source files, within fixed size limits. Asks `PLANNER_MODEL` for structured job and candidate profiles, where every piece of evidence has a server-issued ID. If the repository cannot be read, analysis continues with the resume and job description and shows a warning. |
-| Plan | `POST /api/plan` | Asks `PLANNER_MODEL` for a short interview plan (2 questions for a 5-minute session). Each question is linked to job requirements and evidence IDs; the server drops unknown IDs and any question left without a real source. |
-| Interview | `POST /api/session` | The browser sends its WebRTC offer and the plan. The server builds the interviewer instructions from the persona, rubric focus and company style in `content/`, then creates the Realtime call with the server-side key and returns only the answer SDP. Audio flows directly between the browser and OpenAI. The browser sends time cues near the end of the session and hangs up when time runs out. |
+| Plan | `POST /api/plan` | Asks `PLANNER_MODEL` for a short interview plan: 2 questions for a 5-minute session; for 15 minutes, 5 technical or 3 behavioral questions. Each question is linked to job requirements and evidence IDs; the server drops unknown IDs and any question left without a real source. |
+| Interview | `POST /api/session` | The browser sends its WebRTC offer and the plan. The server builds the interviewer instructions from the persona, rubric focus and company style in `content/`, then creates the Realtime call with the server-side key and returns only the answer SDP. Audio flows directly between the browser and OpenAI. The browser sends time cues near the end of the session and hangs up when time runs out. After about 10 seconds of silence it also sends a cue, so the interviewer checks in once and then moves on instead of waiting or repeating the question. |
 | Report | `POST /api/report` | Asks `EVALUATOR_MODEL` to choose a rubric level for each dimension, citing transcript turns. The server checks every quote against the candidate's own complete turns and marks any dimension without a verified quote as "insufficient evidence". Scores and rubric wording come from the rubric files, not from the model. |
 
 ### Evidence and accuracy
@@ -94,9 +95,9 @@ flowchart LR
 - **Cost limits.**
   - `AI_ENABLED` and `VOICE_ENABLED` kill switches: every paid route returns 503 unless they are set to `true`.
   - Input limits: job description and resume text up to 10,000 characters each; resume PDF up to 2 MB and 5 pages; up to 15 repository files, 50 KB each, 200 KB in total; reports up to 60 turns.
-  - Rate limits per IP in a 10-minute window: 3 voice sessions, 5 analyses or plans, and 5 reports. Voice sessions are also capped at 150 per day across all users.
+  - Rate limits per IP in a 10-minute window: 15 minutes of voice interviews (three 5-minute interviews or one 15-minute interview), 5 analyses, 5 plans and 5 reports. Voice is also capped at 750 interview minutes per day across all users.
   - Same-origin checks on every API route.
-  - Interviews are 5 minutes long.
+  - Interviews are 5 or 15 minutes long; the server accepts no other length.
 
 ## Limitations
 
@@ -104,7 +105,7 @@ flowchart LR
 - **Limited code reading:** MockMate reads only a limited number of files from public repositories. If something isn't found in the inspected files, that doesn't mean you didn't build it.
 - **Imperfect transcription:** speech-to-text can make mistakes, especially with technical terms or accents, and this can affect feedback.
 - **Company styles are approximations:** they are based on public, official company pages, not on any real company's internal process or question bank.
-- **Session length:** sessions are short (about 5 minutes) to control cost.
+- **Session length:** sessions are short (5 or 15 minutes) to control cost.
 - **Supported inputs:** English only. Resumes in PDF or plain text, public GitHub repositories only.
 
 ### Technical limitations

@@ -1,11 +1,13 @@
 /**
  * In-memory sliding-window limiter. Best effort only: serverless instances do not share
  * memory, so limits are per instance and reset on cold start (accepted in brief section 5.3).
+ * Each request uses `cost` units of the budget (1 by default; voice sessions use their minutes).
  */
 
 interface Slot {
   id: number;
   at: number;
+  cost: number;
 }
 
 const buckets = new Map<string, Slot[]>();
@@ -18,16 +20,25 @@ export interface RateLimitResult {
   slotId: number;
 }
 
-export function checkRateLimit(key: string, limit: number, windowMs: number, now = Date.now()): RateLimitResult {
+export function checkRateLimit(key: string, limit: number, windowMs: number, cost = 1, now = Date.now()): RateLimitResult {
   const recent = (buckets.get(key) ?? []).filter((slot) => now - slot.at < windowMs);
-  if (recent.length >= limit) {
-    buckets.set(key, recent);
-    const retryAfterSeconds = Math.max(1, Math.ceil((windowMs - (now - recent[0].at)) / 1000));
-    return { allowed: false, retryAfterSeconds, slotId: 0 };
+  buckets.set(key, recent);
+  const used = recent.reduce((sum, slot) => sum + slot.cost, 0);
+  if (used + cost > limit) {
+    // Wait until enough of the oldest slots expire to make room for this request.
+    let freed = 0;
+    let retryAt = now + windowMs;
+    for (const slot of recent) {
+      freed += slot.cost;
+      if (used - freed + cost <= limit) {
+        retryAt = slot.at + windowMs;
+        break;
+      }
+    }
+    return { allowed: false, retryAfterSeconds: Math.max(1, Math.ceil((retryAt - now) / 1000)), slotId: 0 };
   }
   const slotId = nextSlotId++;
-  recent.push({ id: slotId, at: now });
-  buckets.set(key, recent);
+  recent.push({ id: slotId, at: now, cost });
   return { allowed: true, retryAfterSeconds: 0, slotId };
 }
 

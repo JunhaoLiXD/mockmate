@@ -52,13 +52,15 @@ export async function POST(request: Request): Promise<Response> {
 
   const ip = getClientIp(request);
   const ipKey = `voice:${ip}`;
-  const perIp = checkRateLimit(ipKey, RATE_LIMITS.voiceSessionsPerWindow, WINDOW_MS);
+  // Voice limits are counted in interview minutes, so longer interviews use more of the budget.
+  const minutes = plan.durationMinutes;
+  const perIp = checkRateLimit(ipKey, RATE_LIMITS.voiceMinutesPerWindow, WINDOW_MS, minutes);
   if (!perIp.allowed) {
-    return apiError(429, "RATE_LIMITED", "You've started several interviews recently. Please wait a few minutes and try again.", {
+    return apiError(429, "RATE_LIMITED", "You've used your practice time for now. Please wait a few minutes and try again.", {
       retryAfterSeconds: perIp.retryAfterSeconds,
     });
   }
-  const daily = checkRateLimit("voice:global", RATE_LIMITS.globalVoiceSessionsPerDay, DAY_MS);
+  const daily = checkRateLimit("voice:global", RATE_LIMITS.globalVoiceMinutesPerDay, DAY_MS, minutes);
   if (!daily.allowed) {
     releaseRateLimit(ipKey, perIp.slotId);
     return apiError(429, "RATE_LIMITED", "The demo has reached today's interview limit. Please try again tomorrow.", {

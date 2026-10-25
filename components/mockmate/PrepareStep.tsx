@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import type { CompanyStyle, InterviewMode } from "@/types";
-import { COMPANY_STYLES, GITHUB_REPO_URL_PATTERN, INPUT_LIMITS, INTERVIEW_MODES } from "@/types";
+import type { CompanyStyle, InterviewDuration, InterviewMode } from "@/types";
+import { COMPANY_STYLES, GITHUB_REPO_URL_PATTERN, INPUT_LIMITS, INTERVIEW_DURATIONS, INTERVIEW_MODES, SESSION_LIMITS } from "@/types";
 
 export interface IntakeValues {
   jobDescription: string;
@@ -12,6 +12,7 @@ export interface IntakeValues {
   repoUrl: string;
   companyStyle: CompanyStyle;
   mode: InterviewMode;
+  durationMinutes: InterviewDuration;
 }
 
 export const EMPTY_INTAKE: IntakeValues = {
@@ -22,6 +23,12 @@ export const EMPTY_INTAKE: IntakeValues = {
   repoUrl: "",
   companyStyle: "general-tech",
   mode: "technical",
+  durationMinutes: SESSION_LIMITS.defaultDurationMinutes,
+};
+
+const DURATION_HINTS: Record<InterviewDuration, string> = {
+  5: "quick practice",
+  15: "fuller interview",
 };
 
 /** Fictional sample inputs. TODO: replace with Lisa's content/demo files once delivered. */
@@ -227,6 +234,26 @@ export function PrepareStep({
               </div>
             </fieldset>
           </div>
+
+          <fieldset className="field">
+            <legend>Interview length</legend>
+            <div className="choice-list">
+              {INTERVIEW_DURATIONS.map((minutes) => (
+                <label key={minutes} className="choice">
+                  <input
+                    type="radio"
+                    name="duration"
+                    value={minutes}
+                    checked={values.durationMinutes === minutes}
+                    onChange={() => set("durationMinutes", minutes)}
+                  />
+                  <span>
+                    {minutes} minutes <small>{DURATION_HINTS[minutes]}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           {submitError && (
             <p className="meeting-error" role="alert" style={{ margin: "8px 0 0" }}>
