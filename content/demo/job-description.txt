@@ -1,57 +1,57 @@
 [Demo job description. Fictional company and role created for MockMate AI practice.]
 
-Computer Vision Engineer (Entry Level), Computational Imaging Lab
-Quillmoor Biosciences (fictional) | Boston, MA (Hybrid) | Full-time
+Software Engineer (Entry Level), AI Customer Experience
+Fernbrook Retail Group (fictional) | Atlanta, GA (Hybrid) | Full-time
 
-ABOUT QUILLMOOR
-Quillmoor Biosciences builds automated microscopy systems that photograph
-living cells thousands of times a day. Our software measures how cells grow,
-divide, move, and respond to drugs, and our pharmaceutical partners use these
-measurements to decide which drug candidates move forward. That means our
-image analysis has to be accurate, reproducible, and fast.
+ABOUT FERNBROOK
+Fernbrook Retail Group runs 300 home-goods stores and an online shop. Our AI
+Customer Experience team builds assistants that help customers and store staff:
+answering product questions, guiding returns, and coaching new associates. These
+tools talk to real customers every day, so they have to be accurate, safe with
+personal data, and affordable to run at scale.
 
 ABOUT THE TEAM
-The Computational Imaging Lab is an 8-person team of biologists, machine
-learning researchers, and engineers, led by Dr. Albert Hale. We turn raw,
-noisy microscope images into clean, trustworthy data that scientists can use
-every morning.
+We are a 10-person team of engineers, a product manager, and a data analyst. We
+work closely with store operations, legal, and customer support, and we ship to
+production every week.
 
 WHAT YOU'LL DO
-- Build and improve image-enhancement tools for microscopy images, including
-  contrast correction, low-light enhancement, and denoising.
-- Combine classical image processing (for example histogram equalization and
-  edge-preserving filters) with deep learning models where they help.
-- Turn research prototypes into reliable, modular pipelines that run every
-  night on new data.
-- Build and maintain internal web tools and APIs that let scientists upload
-  images, choose processing steps, and download results.
-- Design evaluations that show a method works on real lab data, not just on a
-  benchmark, and explain the results clearly to biologists.
-- Choose methods that work on real lab data under time limits, and document
-  the trade-offs.
+- Build full-stack features in TypeScript with React and Next.js, including
+  server routes that call large language model APIs.
+- Add real-time features, such as voice or streaming chat, and handle the
+  failure cases that come with them: dropped connections, slow responses, and
+  users who interrupt.
+- Design structured outputs and validation so model responses can be checked
+  before customers see them.
+- Protect customer data: keep secrets on the server, limit what is logged, and
+  treat user input as untrusted.
+- Control cost and abuse with input limits, rate limits, and kill switches.
+- Measure whether an AI feature actually helps, and explain the results and
+  trade-offs to non-technical partners in operations and support.
 
 BASIC QUALIFICATIONS
-- Bachelor's degree in Computer Science, Electrical Engineering, or a related
-  field (new graduates welcome).
-- Strong programming skills in Python.
-- Experience with image processing using OpenCV and NumPy.
-- Experience training or using deep learning models with PyTorch.
+- Bachelor's degree in Computer Science or a related field (new graduates
+  welcome).
+- Strong programming skills in TypeScript or JavaScript.
+- Experience building web applications with React.
+- Experience building and calling REST APIs.
 - Understanding of core data structures, algorithms, and software design.
 - Experience with Git.
 
 PREFERRED QUALIFICATIONS
-- Experience building REST APIs (for example with FastAPI or Flask).
-- Experience building a front end with React or TypeScript.
-- Experience deploying an application to a cloud service.
-- Experience with low-light enhancement, denoising, or image restoration.
-- Ability to explain technical results to people without a technical
+- Experience with Next.js or another server-rendered React framework.
+- Experience building with large language model APIs, including prompt design
+  and structured outputs.
+- Experience with real-time web technologies such as WebRTC or WebSockets.
+- Experience deploying an application to a cloud platform.
+- Experience with input validation and schema libraries (for example zod).
+- Ability to explain technical risk and cost to people without a technical
   background.
-- Interest in biology or scientific imaging (no biology background required).
 
 WHAT WE VALUE
-- Real understanding of what you built, beyond knowing how to call a library.
-- Honest evaluation: knowing how and why a method fails.
-- Clear thinking about trade-offs between quality, speed, and cost.
-- Clear communication with teammates from different backgrounds.
+- Reliability over cleverness: features that fail safely and predictably.
+- Honest measurement: knowing when an AI feature is wrong, and why.
+- Clear thinking about trade-offs between quality, speed, cost, and privacy.
+- Respect for customers' time and data.
 
 This is a fictional job posting for interview practice only.

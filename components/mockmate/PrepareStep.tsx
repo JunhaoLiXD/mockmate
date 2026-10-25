@@ -32,7 +32,7 @@ const DURATION_HINTS: Record<InterviewDuration, string> = {
 };
 
 /** Fictional demo inputs for "Try sample details", read from content/demo/ on the server. */
-export type SampleDetails = Pick<IntakeValues, "jobDescription" | "resumeText" | "repoUrl">;
+export type SampleDetails = Pick<IntakeValues, "jobDescription" | "resumeText" | "repoUrl" | "companyStyle">;
 
 type Errors = Partial<Record<"jobDescription" | "resume" | "repoUrl", string>>;
 
